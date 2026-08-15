@@ -1,0 +1,759 @@
+<!DOCTYPE html>
+
+<html lang="en">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Bikusura Group | Building Wealth. Creating Value.</title>
+
+    <meta name="description"
+
+          content="Bikusura Group - Building wealth, creating value and exploring global opportunities.">
+
+    <style>
+
+        * {
+
+            margin: 0;
+
+            padding: 0;
+
+            box-sizing: border-box;
+
+        }
+
+        html {
+
+            scroll-behavior: smooth;
+
+        }
+
+        body {
+
+            font-family: Arial, Helvetica, sans-serif;
+
+            background: #071426;
+
+            color: #ffffff;
+
+            line-height: 1.7;
+
+        }
+
+        /* ================= HEADER ================= */
+
+        header {
+
+            position: sticky;
+
+            top: 0;
+
+            z-index: 1000;
+
+            background: rgba(7, 20, 38, 0.96);
+
+            border-bottom: 1px solid rgba(201, 164, 92, 0.25);
+
+            backdrop-filter: blur(10px);
+
+        }
+
+        nav {
+
+            max-width: 1150px;
+
+            margin: auto;
+
+            padding: 20px 25px;
+
+            display: flex;
+
+            justify-content: space-between;
+
+            align-items: center;
+
+        }
+
+        .logo {
+
+            font-size: 21px;
+
+            font-weight: 800;
+
+            letter-spacing: 3px;
+
+        }
+
+        .logo span {
+
+            color: #c9a45c;
+
+            font-weight: 400;
+
+        }
+
+        .nav-links {
+
+            display: flex;
+
+            gap: 28px;
+
+        }
+
+        .nav-links a {
+
+            color: #ffffff;
+
+            text-decoration: none;
+
+            font-size: 14px;
+
+            transition: 0.3s;
+
+        }
+
+        .nav-links a:hover {
+
+            color: #c9a45c;
+
+        }
+
+        /* ================= HERO ================= */
+
+        .hero {
+
+            min-height: 88vh;
+
+            max-width: 1150px;
+
+            margin: auto;
+
+            padding: 120px 25px;
+
+            display: flex;
+
+            flex-direction: column;
+
+            justify-content: center;
+
+        }
+
+        .eyebrow {
+
+            color: #c9a45c;
+
+            font-size: 12px;
+
+            font-weight: 700;
+
+            letter-spacing: 5px;
+
+            margin-bottom: 20px;
+
+        }
+
+        .hero h1 {
+
+            font-size: clamp(48px, 8vw, 90px);
+
+            line-height: 1.02;
+
+            letter-spacing: -3px;
+
+            max-width: 950px;
+
+        }
+
+        .hero h1 span {
+
+            color: #c9a45c;
+
+        }
+
+        .hero-description {
+
+            max-width: 680px;
+
+            color: #aeb8c6;
+
+            font-size: 18px;
+
+            margin: 30px 0;
+
+        }
+
+        .button {
+
+            display: inline-block;
+
+            width: fit-content;
+
+            background: #c9a45c;
+
+            color: #071426;
+
+            padding: 14px 26px;
+
+            text-decoration: none;
+
+            font-weight: 700;
+
+            border-radius: 3px;
+
+            transition: 0.3s;
+
+        }
+
+        .button:hover {
+
+            background: #ffffff;
+
+            transform: translateY(-2px);
+
+        }
+
+        /* ================= SECTIONS ================= */
+
+        section {
+
+            max-width: 1150px;
+
+            margin: auto;
+
+            padding: 110px 25px;
+
+        }
+
+        section h2 {
+
+            font-size: clamp(35px, 5vw, 58px);
+
+            line-height: 1.15;
+
+            margin-bottom: 25px;
+
+            color: #f5f1e8;
+
+        }
+
+        .section-description {
+
+            max-width: 780px;
+
+            color: #aeb8c6;
+
+            font-size: 17px;
+
+        }
+
+        /* ================= DIVISIONS ================= */
+
+        .cards {
+
+            margin-top: 50px;
+
+            display: grid;
+
+            grid-template-columns: repeat(3, 1fr);
+
+            gap: 20px;
+
+        }
+
+        .card {
+
+            padding: 32px;
+
+            min-height: 210px;
+
+            border: 1px solid rgba(201, 164, 92, 0.25);
+
+            background: rgba(255, 255, 255, 0.025);
+
+            transition: 0.3s;
+
+        }
+
+        .card:hover {
+
+            transform: translateY(-5px);
+
+            border-color: #c9a45c;
+
+            background: rgba(201, 164, 92, 0.05);
+
+        }
+
+        .card h3 {
+
+            color: #c9a45c;
+
+            font-size: 21px;
+
+            margin-bottom: 12px;
+
+        }
+
+        .card p {
+
+            color: #aeb8c6;
+
+            font-size: 14px;
+
+        }
+
+        /* ================= VISION ================= */
+
+        .vision {
+
+            max-width: none;
+
+            text-align: center;
+
+            border-top: 1px solid rgba(201, 164, 92, 0.2);
+
+            border-bottom: 1px solid rgba(201, 164, 92, 0.2);
+
+            padding: 130px 25px;
+
+        }
+
+        .vision h2 {
+
+            max-width: 900px;
+
+            margin: auto;
+
+        }
+
+        /* ================= CONTACT ================= */
+
+        .contact {
+
+            padding-bottom: 130px;
+
+        }
+
+        .contact .button {
+
+            margin-top: 30px;
+
+        }
+
+        /* ================= FOOTER ================= */
+
+        footer {
+
+            border-top: 1px solid rgba(201, 164, 92, 0.2);
+
+            max-width: 1150px;
+
+            margin: auto;
+
+            padding: 35px 25px;
+
+            display: flex;
+
+            justify-content: space-between;
+
+            align-items: center;
+
+            color: #7f8b9b;
+
+            font-size: 13px;
+
+        }
+
+        /* ================= MOBILE ================= */
+
+        @media (max-width: 750px) {
+
+            .nav-links {
+
+                display: none;
+
+            }
+
+            .hero {
+
+                min-height: 80vh;
+
+                padding: 90px 25px;
+
+            }
+
+            .hero h1 {
+
+                font-size: 50px;
+
+                letter-spacing: -2px;
+
+            }
+
+            section {
+
+                padding: 80px 25px;
+
+            }
+
+            .cards {
+
+                grid-template-columns: 1fr;
+
+            }
+
+            footer {
+
+                display: block;
+
+            }
+
+            footer .logo {
+
+                margin-bottom: 12px;
+
+            }
+
+        }
+
+    </style>
+
+</head>
+
+<body>
+
+    <!-- ================= HEADER ================= -->
+
+    <header>
+
+        <nav>
+
+            <div class="logo">
+
+                BIKUSURA <span>GROUP</span>
+
+            </div>
+
+            <div class="nav-links">
+
+                <a href="#about">About</a>
+
+                <a href="#divisions">Divisions</a>
+
+                <a href="#vision">Vision</a>
+
+                <a href="#contact">Contact</a>
+
+            </div>
+
+        </nav>
+
+    </header>
+
+    <!-- ================= HERO ================= -->
+
+    <main>
+
+        <div class="hero">
+
+            <div class="eyebrow">
+
+                BIKUSURA GROUP
+
+            </div>
+
+            <h1>
+
+                Building Wealth.
+
+                <br>
+
+                <span>Creating Value.</span>
+
+            </h1>
+
+            <p class="hero-description">
+
+                A modern investment and business group focused on
+
+                disciplined capital allocation, long-term value creation
+
+                and global opportunities.
+
+            </p>
+
+            <a class="button" href="#about">
+
+                Discover Bikusura
+
+            </a>
+
+        </div>
+
+        <!-- ================= ABOUT ================= -->
+
+        <section id="about">
+
+            <div class="eyebrow">
+
+                ABOUT US
+
+            </div>
+
+            <h2>
+
+                Long-term thinking.
+
+                <br>
+
+                Disciplined decisions.
+
+            </h2>
+
+            <p class="section-description">
+
+                Bikusura Group is being built with a long-term approach
+
+                to investing, entrepreneurship and wealth creation.
+
+                Our objective is to identify quality opportunities,
+
+                manage risk thoughtfully and create sustainable value
+
+                over time.
+
+            </p>
+
+        </section>
+
+        <!-- ================= DIVISIONS ================= -->
+
+        <section id="divisions">
+
+            <div class="eyebrow">
+
+                OUR FOCUS
+
+            </div>
+
+            <h2>
+
+                Multiple avenues.
+
+                <br>
+
+                One vision.
+
+            </h2>
+
+            <div class="cards">
+
+                <div class="card">
+
+                    <h3>
+
+                        Bikusura Capital
+
+                    </h3>
+
+                    <p>
+
+                        Public-market and global investment opportunities
+
+                        approached with a long-term perspective.
+
+                    </p>
+
+                </div>
+
+                <div class="card">
+
+                    <h3>
+
+                        Real Estate
+
+                    </h3>
+
+                    <p>
+
+                        Exploring real-estate assets and opportunities
+
+                        focused on durable long-term value.
+
+                    </p>
+
+                </div>
+
+                <div class="card">
+
+                    <h3>
+
+                        Digital Assets
+
+                    </h3>
+
+                    <p>
+
+                        Researching emerging digital and blockchain-based
+
+                        opportunities with disciplined risk management.
+
+                    </p>
+
+                </div>
+
+                <div class="card">
+
+                    <h3>
+
+                        Precious Metals
+
+                    </h3>
+
+                    <p>
+
+                        Exploring gold, silver and other stores of value
+
+                        as part of a diversified approach.
+
+                    </p>
+
+                </div>
+
+                <div class="card">
+
+                    <h3>
+
+                        Retirement Assets
+
+                    </h3>
+
+                    <p>
+
+                        Long-term wealth-building through structured
+
+                        retirement and financial assets.
+
+                    </p>
+
+                </div>
+
+                <div class="card">
+
+                    <h3>
+
+                        Private Ventures
+
+                    </h3>
+
+                    <p>
+
+                        Exploring promising businesses, startups and
+
+                        entrepreneurial opportunities.
+
+                    </p>
+
+                </div>
+
+            </div>
+
+        </section>
+
+        <!-- ================= VISION ================= -->
+
+        <section id="vision" class="vision">
+
+            <div class="eyebrow">
+
+                OUR VISION
+
+            </div>
+
+            <h2>
+
+                Think globally.
+
+                Invest intelligently.
+
+                Build for generations.
+
+            </h2>
+
+        </section>
+
+        <!-- ================= CONTACT ================= -->
+
+        <section id="contact" class="contact">
+
+            <div class="eyebrow">
+
+                CONTACT
+
+            </div>
+
+            <h2>
+
+                Let's build something meaningful.
+
+            </h2>
+
+            <p class="section-description">
+
+                For business and investment enquiries,
+
+                contact Bikusura Group.
+
+            </p>
+
+            <!--
+
+                IMPORTANT:
+
+                Replace the email below with your actual
+
+                Bikusura Gmail address.
+
+            -->
+
+            <a
+
+                class="button"
+
+                href="mailto:YOUR-BIKUSURA-GMAIL@gmail.com"
+
+            >
+
+                Email Bikusura
+
+            </a>
+
+        </section>
+
+    </main>
+
+    <!-- ================= FOOTER ================= -->
+
+    <footer>
+
+        <div class="logo">
+
+            BIKUSURA <span>GROUP</span>
+
+        </div>
+
+        <div>
+
+            © 2026 Bikusura Group. All rights reserved.
+
+        </div>
+
+    </footer>
+
+</body>
+
+</html>
