@@ -1,0 +1,822 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Bikusura Group | Building Wealth. Creating Value.</title>
+<meta name="description" content="Bikusura Group — Building wealth, creating value and exploring long-term global opportunities.">
+
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{font-family:Arial,Helvetica,sans-serif;background:#061426;color:#fff;line-height:1.6}
+
+:root{
+--navy:#061426;
+--navy2:#0b1d34;
+--gold:#d9ad4b;
+--gold2:#f1cf76;
+--text:#f5f2e9;
+--muted:#aab5c4
+}
+
+header{
+position:sticky;
+top:0;
+z-index:1000;
+background:rgba(6,20,38,.96);
+border-bottom:1px solid rgba(217,173,75,.35);
+backdrop-filter:blur(12px)
+}
+
+nav{
+max-width:1200px;
+margin:auto;
+padding:16px 25px;
+display:flex;
+justify-content:space-between;
+align-items:center
+}
+
+.brand{
+display:flex;
+align-items:center;
+gap:12px
+}
+
+.brand-mark{
+width:48px;
+height:48px;
+border:2px solid var(--gold);
+border-radius:50%;
+display:flex;
+align-items:center;
+justify-content:center;
+color:var(--gold2);
+font-family:Georgia,serif;
+font-size:28px;
+font-weight:bold
+}
+
+.brand-name{
+font-family:Georgia,serif;
+letter-spacing:3px;
+font-size:21px;
+font-weight:bold
+}
+
+.brand-name span{
+display:block;
+color:var(--gold2);
+font-size:11px;
+letter-spacing:5px;
+text-align:center
+}
+
+.navlinks{
+display:flex;
+gap:30px
+}
+
+.navlinks a{
+color:white;
+text-decoration:none;
+font-size:14px
+}
+
+.navlinks a:hover{
+color:var(--gold2)
+}
+
+.hero{
+min-height:88vh;
+max-width:1200px;
+margin:auto;
+padding:100px 25px 80px;
+display:grid;
+grid-template-columns:1.1fr .9fr;
+align-items:center;
+gap:50px
+}
+
+.eyebrow{
+color:var(--gold2);
+letter-spacing:5px;
+font-size:12px;
+font-weight:bold;
+margin-bottom:20px
+}
+
+.hero h1{
+font-family:Georgia,serif;
+font-size:clamp(50px,7vw,90px);
+line-height:1;
+letter-spacing:-3px
+}
+
+.hero h1 span{
+color:var(--gold2)
+}
+
+.tagline{
+font-family:Georgia,serif;
+font-size:22px;
+font-style:italic;
+margin:25px 0;
+color:#eee7d8
+}
+
+.hero p{
+color:var(--muted);
+max-width:650px;
+font-size:17px
+}
+
+.buttons{
+margin-top:35px;
+display:flex;
+gap:15px;
+flex-wrap:wrap
+}
+
+.btn{
+padding:14px 25px;
+border-radius:4px;
+text-decoration:none;
+font-weight:bold;
+display:inline-block
+}
+
+.btn-gold{
+background:var(--gold2);
+color:#061426
+}
+
+.btn-outline{
+border:1px solid var(--gold);
+color:white
+}
+
+.visual{
+min-height:430px;
+border:1px solid rgba(217,173,75,.3);
+border-radius:20px;
+background:radial-gradient(circle at 50% 35%,rgba(217,173,75,.22),transparent 32%),linear-gradient(145deg,#0b2340,#061426);
+display:flex;
+align-items:center;
+justify-content:center;
+position:relative;
+overflow:hidden
+}
+
+.globe{
+width:270px;
+height:270px;
+border-radius:50%;
+border:2px solid var(--gold);
+box-shadow:0 0 70px rgba(217,173,75,.2);
+display:flex;
+align-items:center;
+justify-content:center;
+font-size:100px;
+color:var(--gold2)
+}
+
+.visual-label{
+position:absolute;
+bottom:25px;
+left:25px;
+right:25px;
+padding:15px;
+background:rgba(6,20,38,.8);
+border:1px solid rgba(217,173,75,.3);
+text-align:center;
+color:var(--gold2);
+letter-spacing:3px
+}
+
+section{
+max-width:1200px;
+margin:auto;
+padding:100px 25px
+}
+
+section h2{
+font-family:Georgia,serif;
+font-size:clamp(38px,5vw,60px);
+line-height:1.1;
+margin-bottom:25px
+}
+
+.description{
+color:var(--muted);
+max-width:800px;
+font-size:17px
+}
+
+.cards{
+margin-top:50px;
+display:grid;
+grid-template-columns:repeat(3,1fr);
+gap:20px
+}
+
+.card{
+padding:32px;
+min-height:220px;
+background:linear-gradient(145deg,#0c2038,#08182c);
+border:1px solid rgba(217,173,75,.25);
+border-radius:8px;
+transition:.3s
+}
+
+.card:hover{
+transform:translateY(-7px);
+border-color:var(--gold)
+}
+
+.icon{
+font-size:35px;
+color:var(--gold2);
+margin-bottom:20px
+}
+
+.card h3{
+color:var(--gold2);
+margin-bottom:12px;
+font-family:Georgia,serif;
+font-size:22px
+}
+
+.card p{
+color:var(--muted);
+font-size:14px
+}
+
+/* =========================
+   FOUNDER SECTION
+========================= */
+
+.founder-section{
+max-width:1200px;
+margin:auto;
+padding:120px 25px;
+text-align:center
+}
+
+.founder-box{
+max-width:900px;
+margin:auto;
+padding:65px 45px;
+background:linear-gradient(145deg,#0c2038,#08182c);
+border:1px solid rgba(217,173,75,.35);
+border-radius:12px;
+box-shadow:0 20px 60px rgba(0,0,0,.25)
+}
+
+.founder-label{
+color:var(--gold2);
+letter-spacing:5px;
+font-size:12px;
+font-weight:bold;
+margin-bottom:20px
+}
+
+.founder-box h2{
+font-family:Georgia,serif;
+font-size:clamp(42px,6vw,68px);
+margin-bottom:8px;
+letter-spacing:2px
+}
+
+.founder-title{
+color:var(--gold2);
+font-size:19px;
+font-weight:bold;
+margin-bottom:30px
+}
+
+.founder-line{
+width:75px;
+height:2px;
+background:var(--gold);
+margin:0 auto 35px
+}
+
+.founder-note{
+max-width:720px;
+margin:auto;
+color:var(--muted);
+font-size:17px;
+line-height:1.9
+}
+
+.founder-quote{
+margin-top:35px;
+font-family:Georgia,serif;
+font-size:22px;
+font-style:italic;
+color:#eee7d8
+}
+
+.founder-signature{
+margin-top:35px;
+color:white;
+font-size:17px
+}
+
+.founder-signature strong{
+color:var(--gold2);
+font-size:20px
+}
+
+.founder-signature span{
+color:var(--muted);
+font-size:14px
+}
+
+.vision{
+max-width:none;
+text-align:center;
+padding:130px 25px;
+border-top:1px solid rgba(217,173,75,.25);
+border-bottom:1px solid rgba(217,173,75,.25);
+background:linear-gradient(135deg,#08192d,#0b2038,#061426)
+}
+
+.vision h2{
+max-width:950px;
+margin:auto
+}
+
+.stats{
+display:grid;
+grid-template-columns:repeat(4,1fr);
+border-top:1px solid rgba(217,173,75,.25);
+border-bottom:1px solid rgba(217,173,75,.25)
+}
+
+.stat{
+padding:35px 15px;
+text-align:center;
+border-right:1px solid rgba(217,173,75,.2)
+}
+
+.stat:last-child{
+border-right:0
+}
+
+.stat strong{
+display:block;
+color:var(--gold2);
+font-family:Georgia,serif;
+font-size:30px
+}
+
+.stat span{
+color:var(--muted);
+font-size:13px
+}
+
+.contact-box{
+margin-top:40px;
+padding:45px;
+border:1px solid rgba(217,173,75,.3);
+background:#091a2e;
+border-radius:8px
+}
+
+.contact-item{
+margin-bottom:25px
+}
+
+.contact-label{
+color:#aab5c4;
+margin-bottom:7px;
+font-size:14px;
+letter-spacing:1px
+}
+
+.email,
+.phone{
+color:var(--gold2);
+text-decoration:none;
+font-size:18px
+}
+
+.email:hover,
+.phone:hover{
+text-decoration:underline
+}
+
+footer{
+border-top:1px solid rgba(217,173,75,.25);
+padding:45px 25px;
+text-align:center;
+color:#7e8b9c
+}
+
+footer .brand{
+justify-content:center;
+margin-bottom:20px
+}
+
+.copyright{
+font-size:13px
+}
+
+@media(max-width:800px){
+
+.navlinks{
+display:none
+}
+
+.hero{
+grid-template-columns:1fr;
+padding-top:75px
+}
+
+.hero h1{
+font-size:55px
+}
+
+.visual{
+min-height:330px
+}
+
+.globe{
+width:210px;
+height:210px;
+font-size:75px
+}
+
+.cards{
+grid-template-columns:1fr
+}
+
+.stats{
+grid-template-columns:repeat(2,1fr)
+}
+
+.stat:nth-child(2){
+border-right:0
+}
+
+.stat:nth-child(-n+2){
+border-bottom:1px solid rgba(217,173,75,.2)
+}
+
+.founder-box{
+padding:50px 25px
+}
+
+.founder-box h2{
+font-size:42px
+}
+
+}
+</style>
+</head>
+
+<body>
+
+<header>
+<nav>
+
+<div class="brand">
+<div class="brand-mark">B</div>
+
+<div class="brand-name">
+BIKUSURA
+<span>GROUP</span>
+</div>
+</div>
+
+<div class="navlinks">
+<a href="#home">Home</a>
+<a href="#about">About</a>
+<a href="#divisions">Investments</a>
+<a href="#vision">Vision</a>
+<a href="#founder">Founder</a>
+<a href="#contact">Contact</a>
+</div>
+
+</nav>
+</header>
+
+
+<main id="home">
+
+<!-- HERO -->
+
+<div class="hero">
+
+<div>
+
+<div class="eyebrow">
+GLOBAL INVESTMENT &amp; HOLDING
+</div>
+
+<h1>
+BIKUSURA<br>
+<span>GROUP</span>
+</h1>
+
+<div class="tagline">
+Building Wealth. Creating Value. For Generations.
+</div>
+
+<p>
+Bikusura Group is a long-term focused investment and business group exploring opportunities across financial markets, real assets, digital assets and other areas of sustainable value creation.
+</p>
+
+<div class="buttons">
+<a href="#vision" class="btn btn-gold">
+Explore Our Vision →
+</a>
+
+<a href="#contact" class="btn btn-outline">
+Contact Us
+</a>
+</div>
+
+</div>
+
+
+<div class="visual">
+
+<div class="globe">
+◎
+</div>
+
+<div class="visual-label">
+GLOBAL • LONG-TERM • DISCIPLINED
+</div>
+
+</div>
+
+</div>
+
+
+<!-- STATS -->
+
+<div class="stats">
+
+<div class="stat">
+<strong>Global</strong>
+<span>Investment Perspective</span>
+</div>
+
+<div class="stat">
+<strong>Long-Term</strong>
+<span>Investment Strategy</span>
+</div>
+
+<div class="stat">
+<strong>Multi-Asset</strong>
+<span>Diversified Approach</span>
+</div>
+
+<div class="stat">
+<strong>2026</strong>
+<span>Building the Future</span>
+</div>
+
+</div>
+
+
+<!-- ABOUT -->
+
+<section id="about">
+
+<div class="eyebrow">
+ABOUT BIKUSURA
+</div>
+
+<h2>
+Think globally.<br>
+Build intelligently.
+</h2>
+
+<p class="description">
+Bikusura Group is being developed with a long-term philosophy focused on disciplined decision-making, diversification, capital preservation and sustainable value creation.
+</p>
+
+</section>
+
+
+<!-- INVESTMENTS -->
+
+<section id="divisions">
+
+<div class="eyebrow">
+OUR INVESTMENT AREAS
+</div>
+
+<h2>
+Multiple avenues.<br>
+One vision.
+</h2>
+
+<div class="cards">
+
+<div class="card">
+<div class="icon">▥</div>
+<h3>Bikusura Capital</h3>
+<p>
+Exploring equity markets and investment opportunities across India and global markets with a long-term perspective.
+</p>
+</div>
+
+
+<div class="card">
+<div class="icon">◉</div>
+<h3>Real Estate</h3>
+<p>
+Exploring commercial, residential and other real-asset opportunities focused on durable value.
+</p>
+</div>
+
+
+<div class="card">
+<div class="icon">₿</div>
+<h3>Digital Assets</h3>
+<p>
+Researching emerging digital asset and blockchain opportunities with disciplined risk awareness.
+</p>
+</div>
+
+
+<div class="card">
+<div class="icon">◆</div>
+<h3>Precious Metals</h3>
+<p>
+Gold, silver and other precious metals as part of a diversified long-term asset approach.
+</p>
+</div>
+
+
+<div class="card">
+<div class="icon">⌛</div>
+<h3>Retirement Assets</h3>
+<p>
+Long-term wealth-building through retirement-oriented and financial assets.
+</p>
+</div>
+
+
+<div class="card">
+<div class="icon">✦</div>
+<h3>Private Ventures</h3>
+<p>
+Exploring businesses, startups and entrepreneurial opportunities with long-term potential.
+</p>
+</div>
+
+</div>
+
+</section>
+
+
+<!-- FOUNDER -->
+
+<section id="founder" class="founder-section">
+
+<div class="founder-box">
+
+<div class="founder-label">
+THE FOUNDER
+</div>
+
+<h2>
+BIPIN KUMAR
+</h2>
+
+<p class="founder-title">
+Founder &amp; Promoter — Bikusura Group
+</p>
+
+<div class="founder-line"></div>
+
+<p class="founder-note">
+Bikusura Group is being developed with a long-term vision to build a diversified investment and business platform focused on disciplined decision-making, sustainable value creation and long-term wealth creation.
+</p>
+
+<p class="founder-quote">
+“Think Long Term. Build Value. Create Wealth.”
+</p>
+
+<div class="founder-signature">
+<strong>Bipin Kumar</strong><br>
+<span>Founder &amp; Promoter</span>
+</div>
+
+</div>
+
+</section>
+
+
+<!-- VISION -->
+
+<section id="vision" class="vision">
+
+<div class="eyebrow">
+OUR VISION
+</div>
+
+<h2>
+To build a diversified, disciplined and globally minded platform for long-term wealth creation.
+</h2>
+
+</section>
+
+
+<!-- CONTACT -->
+
+<section id="contact">
+
+<div class="eyebrow">
+CONTACT
+</div>
+
+<h2>
+Let's build something meaningful.
+</h2>
+
+<p class="description">
+For business and investment enquiries, contact Bikusura Group.
+</p>
+
+
+<div class="contact-box">
+
+<div class="contact-item">
+
+<div class="contact-label">
+FOUNDER &amp; PROMOTER
+</div>
+
+<p style="color:#fff;font-size:18px;">
+Bipin Kumar
+</p>
+
+</div>
+
+
+<div class="contact-item">
+
+<div class="contact-label">
+PHONE
+</div>
+
+<a class="phone" href="tel:+917029641625">
++91 70296 41625
+</a>
+
+</div>
+
+
+<div class="contact-item">
+
+<div class="contact-label">
+EMAIL
+</div>
+
+<a class="email" href="mailto:groupbikusura@gmail.com">
+groupbikusura@gmail.com
+</a>
+
+</div>
+
+</div>
+
+</section>
+
+</main>
+
+
+<!-- FOOTER -->
+
+<footer>
+
+<div class="brand">
+
+<div class="brand-mark">
+B
+</div>
+
+<div class="brand-name">
+BIKUSURA
+<span>GROUP</span>
+</div>
+
+</div>
+
+<div class="copyright">
+© 2026 Bikusura Group. All rights reserved.
+</div>
+
+</footer>
+
+</body>
+</html>
