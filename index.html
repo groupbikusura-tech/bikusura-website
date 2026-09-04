@@ -1,0 +1,2340 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <title>Bikusura Group | Building Wealth • Creating Legacy</title>
+
+  <meta name="description" content="Bikusura Group — Building Wealth • Creating Legacy. A diversified global group spanning capital, real estate, digital assets, precious metals, retirement assets, education and private ventures.">
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Playfair+Display:wght@500;600;700&display=swap" rel="stylesheet">
+
+  <style>
+    :root{
+      --navy:#050d18;
+      --navy2:#091728;
+      --navy3:#0d1d31;
+      --gold:#d4af37;
+      --gold2:#f1d477;
+      --white:#f7f8fb;
+      --muted:#aab5c5;
+      --line:rgba(212,175,55,.20);
+      --card:rgba(255,255,255,.045);
+      --max:1200px;
+      --shadow:0 25px 70px rgba(0,0,0,.35);
+    }
+
+    *{
+      margin:0;
+      padding:0;
+      box-sizing:border-box;
+    }
+
+    html{
+      scroll-behavior:smooth;
+    }
+
+    body{
+      font-family:"Inter",sans-serif;
+      background:
+        radial-gradient(circle at 80% 5%,rgba(212,175,55,.10),transparent 28%),
+        radial-gradient(circle at 10% 35%,rgba(31,77,126,.16),transparent 30%),
+        var(--navy);
+      color:var(--white);
+      line-height:1.7;
+      overflow-x:hidden;
+    }
+
+    body.menu-open{
+      overflow:hidden;
+    }
+
+    a{
+      color:inherit;
+      text-decoration:none;
+    }
+
+    img{
+      max-width:100%;
+    }
+
+    .container{
+      width:min(var(--max),92%);
+      margin:auto;
+    }
+
+    /* ================= HEADER ================= */
+
+    .topbar{
+      position:fixed;
+      top:0;
+      left:0;
+      right:0;
+      z-index:1000;
+      border-bottom:1px solid transparent;
+      transition:.3s ease;
+      background:rgba(5,13,24,.55);
+      backdrop-filter:blur(16px);
+    }
+
+    .topbar.scrolled{
+      background:rgba(5,13,24,.94);
+      border-bottom-color:var(--line);
+    }
+
+    .nav-inner{
+      height:78px;
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      width:min(var(--max),92%);
+      margin:auto;
+    }
+
+    .brand{
+      display:flex;
+      align-items:center;
+      gap:12px;
+      font-weight:800;
+      letter-spacing:.08em;
+    }
+
+    .brand-logo{
+      width:48px;
+      height:48px;
+      flex:none;
+    }
+
+    .brand-text{
+      display:flex;
+      flex-direction:column;
+      line-height:1.05;
+    }
+
+    .brand-name{
+      font-size:15px;
+      letter-spacing:.18em;
+    }
+
+    .brand-tag{
+      color:var(--gold2);
+      font-size:8px;
+      letter-spacing:.17em;
+      margin-top:5px;
+    }
+
+    .menu-btn{
+      width:48px;
+      height:48px;
+      border:1px solid var(--line);
+      background:rgba(255,255,255,.035);
+      border-radius:12px;
+      display:flex;
+      flex-direction:column;
+      justify-content:center;
+      align-items:center;
+      gap:5px;
+      cursor:pointer;
+      transition:.25s ease;
+    }
+
+    .menu-btn:hover{
+      border-color:var(--gold);
+      background:rgba(212,175,55,.08);
+    }
+
+    .menu-btn span{
+      width:21px;
+      height:2px;
+      background:var(--gold2);
+      border-radius:5px;
+    }
+
+    /* ================= SIDE MENU ================= */
+
+    .menu-backdrop{
+      position:fixed;
+      inset:0;
+      z-index:1100;
+      background:rgba(0,0,0,.62);
+      opacity:0;
+      visibility:hidden;
+      transition:.3s ease;
+    }
+
+    .side-menu{
+      position:fixed;
+      top:0;
+      right:0;
+      width:min(390px,88vw);
+      height:100vh;
+      z-index:1200;
+      background:
+        radial-gradient(circle at 90% 0%,rgba(212,175,55,.12),transparent 30%),
+        var(--navy2);
+      border-left:1px solid var(--line);
+      transform:translateX(105%);
+      transition:.35s ease;
+      padding:28px;
+      overflow-y:auto;
+    }
+
+    body.menu-open .menu-backdrop{
+      opacity:1;
+      visibility:visible;
+    }
+
+    body.menu-open .side-menu{
+      transform:translateX(0);
+    }
+
+    .menu-head{
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      margin-bottom:35px;
+    }
+
+    .menu-title{
+      font-family:"Playfair Display",serif;
+      font-size:25px;
+    }
+
+    .close-btn{
+      width:42px;
+      height:42px;
+      border:1px solid var(--line);
+      background:transparent;
+      color:var(--gold2);
+      border-radius:10px;
+      cursor:pointer;
+      font-size:23px;
+    }
+
+    .side-links{
+      display:flex;
+      flex-direction:column;
+      gap:4px;
+    }
+
+    .side-links a{
+      padding:15px 12px;
+      border-bottom:1px solid rgba(255,255,255,.06);
+      color:#e8edf4;
+      transition:.2s;
+    }
+
+    .side-links a:hover{
+      color:var(--gold2);
+      padding-left:18px;
+    }
+
+    .menu-contact{
+      margin-top:30px;
+      padding:20px;
+      border:1px solid var(--line);
+      border-radius:16px;
+      background:rgba(255,255,255,.025);
+    }
+
+    .menu-contact small{
+      color:var(--muted);
+      display:block;
+      margin-bottom:7px;
+    }
+
+    /* ================= GENERAL ================= */
+
+    section{
+      padding:105px 0;
+      position:relative;
+    }
+
+    .section-head{
+      max-width:750px;
+      margin-bottom:48px;
+    }
+
+    .eyebrow{
+      color:var(--gold2);
+      font-size:12px;
+      font-weight:700;
+      letter-spacing:.22em;
+      text-transform:uppercase;
+      margin-bottom:15px;
+    }
+
+    h1,h2,h3{
+      line-height:1.15;
+    }
+
+    h2{
+      font-family:"Playfair Display",serif;
+      font-size:clamp(36px,5vw,58px);
+      font-weight:600;
+      margin-bottom:18px;
+    }
+
+    .lead{
+      color:var(--muted);
+      font-size:17px;
+      max-width:760px;
+    }
+
+    .gold{
+      color:var(--gold2);
+    }
+
+    .btns{
+      display:flex;
+      flex-wrap:wrap;
+      gap:13px;
+      margin-top:28px;
+    }
+
+    .btn{
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      min-height:48px;
+      padding:0 21px;
+      border-radius:10px;
+      border:1px solid var(--line);
+      font-weight:700;
+      font-size:14px;
+      transition:.25s ease;
+    }
+
+    .btn-primary{
+      background:linear-gradient(135deg,var(--gold),var(--gold2));
+      color:#07111f;
+      border-color:transparent;
+    }
+
+    .btn-primary:hover{
+      transform:translateY(-2px);
+      box-shadow:0 12px 35px rgba(212,175,55,.18);
+    }
+
+    .btn-outline:hover{
+      border-color:var(--gold);
+      color:var(--gold2);
+      background:rgba(212,175,55,.06);
+    }
+
+    .grid{
+      display:grid;
+      gap:20px;
+    }
+
+    .card{
+      background:linear-gradient(145deg,rgba(255,255,255,.055),rgba(255,255,255,.018));
+      border:1px solid rgba(255,255,255,.08);
+      border-radius:18px;
+      box-shadow:var(--shadow);
+    }
+
+    /* ================= HERO ================= */
+
+    .hero{
+      min-height:100vh;
+      display:flex;
+      align-items:center;
+      padding-top:130px;
+      background:
+        linear-gradient(rgba(5,13,24,.62),rgba(5,13,24,.90)),
+        radial-gradient(circle at 72% 25%,rgba(212,175,55,.18),transparent 28%);
+    }
+
+    .hero::before{
+      content:"";
+      position:absolute;
+      width:550px;
+      height:550px;
+      border:1px solid rgba(212,175,55,.10);
+      border-radius:50%;
+      right:-180px;
+      top:120px;
+    }
+
+    .hero-content{
+      max-width:900px;
+    }
+
+    .hero h1{
+      font-family:"Playfair Display",serif;
+      font-size:clamp(52px,8vw,92px);
+      font-weight:600;
+      letter-spacing:-.035em;
+      margin-bottom:24px;
+    }
+
+    .hero h1 span{
+      color:var(--gold2);
+    }
+
+    .hero-description{
+      max-width:760px;
+      color:#c0c9d6;
+      font-size:18px;
+    }
+
+    .hero-stats{
+      display:grid;
+      grid-template-columns:repeat(3,1fr);
+      margin-top:65px;
+      border-top:1px solid var(--line);
+      border-bottom:1px solid rgba(255,255,255,.07);
+    }
+
+    .hero-stat{
+      padding:25px 20px 25px 0;
+      border-right:1px solid rgba(255,255,255,.08);
+    }
+
+    .hero-stat:last-child{
+      border-right:0;
+      padding-left:20px;
+    }
+
+    .hero-stat:nth-child(2){
+      padding-left:20px;
+    }
+
+    .hero-stat strong{
+      display:block;
+      color:var(--gold2);
+      font-size:15px;
+      margin-bottom:4px;
+    }
+
+    .hero-stat span{
+      color:var(--muted);
+      font-size:13px;
+    }
+
+    /* ================= STATS ================= */
+
+    .stats{
+      padding:30px 0;
+      background:rgba(255,255,255,.018);
+      border-top:1px solid rgba(255,255,255,.05);
+      border-bottom:1px solid rgba(255,255,255,.05);
+    }
+
+    .stats-grid{
+      grid-template-columns:repeat(4,1fr);
+    }
+
+    .stat-box{
+      padding:20px;
+      border-right:1px solid rgba(255,255,255,.07);
+    }
+
+    .stat-box:last-child{
+      border-right:0;
+    }
+
+    .stat-number{
+      color:var(--gold2);
+      font-size:30px;
+      font-weight:800;
+    }
+
+    .stat-label{
+      color:var(--muted);
+      font-size:13px;
+    }
+
+    /* ================= ABOUT ================= */
+
+    .about-grid{
+      grid-template-columns:1.1fr .9fr;
+      align-items:stretch;
+    }
+
+    .about-text{
+      color:#bec8d6;
+      font-size:16px;
+    }
+
+    .about-text p{
+      margin-bottom:18px;
+    }
+
+    .framework{
+      padding:30px;
+    }
+
+    .framework-title{
+      font-family:"Playfair Display",serif;
+      font-size:30px;
+      color:var(--gold2);
+      margin-bottom:25px;
+    }
+
+    .framework-item{
+      display:flex;
+      gap:15px;
+      padding:17px 0;
+      border-bottom:1px solid rgba(255,255,255,.07);
+    }
+
+    .framework-item:last-child{
+      border-bottom:0;
+    }
+
+    .framework-number{
+      color:var(--gold);
+      font-weight:800;
+      min-width:25px;
+    }
+
+    .framework-item strong{
+      display:block;
+      margin-bottom:3px;
+    }
+
+    .framework-item span{
+      color:var(--muted);
+      font-size:13px;
+    }
+
+    /* ================= DIVISIONS ================= */
+
+    .division-grid{
+      grid-template-columns:repeat(3,1fr);
+    }
+
+    .division{
+      padding:28px;
+      min-height:245px;
+      position:relative;
+      overflow:hidden;
+      transition:.3s ease;
+    }
+
+    .division:hover{
+      transform:translateY(-5px);
+      border-color:rgba(212,175,55,.38);
+    }
+
+    .division::after{
+      content:"";
+      position:absolute;
+      width:120px;
+      height:120px;
+      border:1px solid rgba(212,175,55,.08);
+      border-radius:50%;
+      right:-55px;
+      bottom:-55px;
+    }
+
+    .division-number{
+      color:var(--gold);
+      font-size:12px;
+      letter-spacing:.15em;
+      font-weight:800;
+    }
+
+    .division h3{
+      font-family:"Playfair Display",serif;
+      font-size:27px;
+      margin:15px 0 12px;
+    }
+
+    .division p{
+      color:var(--muted);
+      font-size:14px;
+    }
+
+    .division-tag{
+      position:absolute;
+      bottom:24px;
+      left:28px;
+      color:var(--gold2);
+      font-size:10px;
+      letter-spacing:.16em;
+      font-weight:700;
+    }
+
+    /* ================= FEATURED ================= */
+
+    .featured-grid{
+      grid-template-columns:repeat(2,1fr);
+    }
+
+    .featured-card{
+      padding:35px;
+      min-height:290px;
+      position:relative;
+      overflow:hidden;
+    }
+
+    .featured-card.highlight{
+      border-color:rgba(212,175,55,.30);
+      background:
+        radial-gradient(circle at 100% 0%,rgba(212,175,55,.14),transparent 35%),
+        linear-gradient(145deg,rgba(255,255,255,.055),rgba(255,255,255,.018));
+    }
+
+    .featured-label{
+      color:var(--gold2);
+      text-transform:uppercase;
+      letter-spacing:.18em;
+      font-size:11px;
+      font-weight:800;
+    }
+
+    .featured-card h3{
+      font-family:"Playfair Display",serif;
+      font-size:34px;
+      margin:15px 0;
+    }
+
+    .featured-card p{
+      color:var(--muted);
+      max-width:600px;
+    }
+
+    .roadmap-number{
+      font-size:50px;
+      font-weight:800;
+      color:var(--gold2);
+      margin:10px 0;
+    }
+
+    /* ================= PRIVATE VENTURE ================= */
+
+    .private-section{
+      background:
+        linear-gradient(90deg,rgba(212,175,55,.045),transparent 50%),
+        rgba(255,255,255,.015);
+      border-top:1px solid rgba(212,175,55,.08);
+      border-bottom:1px solid rgba(212,175,55,.08);
+    }
+
+    .private-grid{
+      grid-template-columns:1fr 1fr;
+      align-items:center;
+    }
+
+    .private-panel{
+      padding:34px;
+    }
+
+    .private-panel h3{
+      font-family:"Playfair Display",serif;
+      font-size:35px;
+      margin-bottom:17px;
+    }
+
+    .private-panel p{
+      color:var(--muted);
+      margin-bottom:15px;
+    }
+
+    .check-list{
+      display:grid;
+      gap:13px;
+      margin-top:25px;
+    }
+
+    .check{
+      display:flex;
+      gap:12px;
+      color:#dce3ec;
+    }
+
+    .check b{
+      color:var(--gold2);
+    }
+
+    /* ================= EDUCARE ================= */
+
+    .educare{
+      background:
+        radial-gradient(circle at 90% 30%,rgba(212,175,55,.10),transparent 25%);
+    }
+
+    .educare-grid{
+      grid-template-columns:1fr 1fr;
+      align-items:stretch;
+    }
+
+    .edu-main{
+      padding:38px;
+    }
+
+    .edu-logo{
+      display:flex;
+      align-items:center;
+      gap:15px;
+      margin-bottom:25px;
+    }
+
+    .cap-logo{
+      width:62px;
+      height:62px;
+      border:1px solid var(--line);
+      border-radius:50%;
+      display:grid;
+      place-items:center;
+      font-size:28px;
+      background:rgba(212,175,55,.08);
+    }
+
+    .edu-name{
+      font-family:"Playfair Display",serif;
+      font-size:31px;
+    }
+
+    .edu-tagline{
+      color:var(--gold2);
+      font-size:12px;
+      letter-spacing:.15em;
+    }
+
+    .edu-main p{
+      color:var(--muted);
+    }
+
+    .edu-topics{
+      grid-template-columns:repeat(2,1fr);
+      margin-top:25px;
+    }
+
+    .edu-topic{
+      padding:20px;
+      border:1px solid rgba(255,255,255,.07);
+      border-radius:14px;
+      background:rgba(255,255,255,.025);
+    }
+
+    .edu-topic strong{
+      display:block;
+      margin-bottom:5px;
+    }
+
+    .edu-topic span{
+      color:var(--muted);
+      font-size:12px;
+    }
+
+    .edu-side{
+      padding:38px;
+      display:flex;
+      flex-direction:column;
+      justify-content:center;
+    }
+
+    .edu-side h3{
+      font-family:"Playfair Display",serif;
+      font-size:32px;
+      margin-bottom:15px;
+    }
+
+    .edu-side p{
+      color:var(--muted);
+    }
+
+    .edu-motto{
+      margin-top:25px;
+      padding:20px;
+      border-left:3px solid var(--gold);
+      background:rgba(212,175,55,.045);
+      color:#e9edf3;
+    }
+
+    /* ================= GLOBAL ================= */
+
+    .global-box{
+      padding:40px;
+      text-align:center;
+    }
+
+    .global-box p{
+      color:var(--muted);
+      max-width:750px;
+      margin:0 auto;
+    }
+
+    .market-grid{
+      grid-template-columns:repeat(3,1fr);
+      margin-top:30px;
+    }
+
+    .market{
+      padding:24px;
+      text-align:center;
+      border:1px solid rgba(255,255,255,.07);
+      border-radius:15px;
+      background:rgba(255,255,255,.025);
+    }
+
+    .market strong{
+      display:block;
+      font-size:18px;
+      margin-bottom:4px;
+    }
+
+    .market span{
+      color:var(--gold2);
+      font-size:11px;
+      letter-spacing:.12em;
+    }
+
+    /* ================= APPROACH ================= */
+
+    .approach-grid{
+      grid-template-columns:repeat(5,1fr);
+    }
+
+    .approach{
+      padding:26px 22px;
+      text-align:center;
+    }
+
+    .approach-number{
+      color:var(--gold);
+      font-weight:800;
+      font-size:12px;
+    }
+
+    .approach h3{
+      margin:14px 0 8px;
+      font-size:18px;
+    }
+
+    .approach p{
+      color:var(--muted);
+      font-size:12px;
+    }
+
+    /* ================= FOUNDER ================= */
+
+    .founder-grid{
+      grid-template-columns:.7fr 1.3fr;
+      align-items:center;
+    }
+
+    .founder-card{
+      padding:40px;
+      text-align:center;
+    }
+
+    .founder-initial{
+      width:120px;
+      height:120px;
+      border-radius:50%;
+      margin:0 auto 20px;
+      display:grid;
+      place-items:center;
+      border:1px solid var(--gold);
+      color:var(--gold2);
+      font-family:"Playfair Display",serif;
+      font-size:50px;
+      background:rgba(212,175,55,.06);
+    }
+
+    .founder-card h3{
+      font-family:"Playfair Display",serif;
+      font-size:28px;
+    }
+
+    .founder-card p{
+      color:var(--gold2);
+      font-size:12px;
+      letter-spacing:.13em;
+      margin-top:5px;
+    }
+
+    .founder-text p{
+      color:var(--muted);
+      margin-bottom:17px;
+    }
+
+    /* ================= INSIGHTS ================= */
+
+    .insights-grid{
+      grid-template-columns:repeat(3,1fr);
+    }
+
+    .insight{
+      padding:27px;
+      transition:.25s;
+    }
+
+    .insight:hover{
+      transform:translateY(-4px);
+      border-color:rgba(212,175,55,.28);
+    }
+
+    .insight-number{
+      color:var(--gold);
+      font-size:11px;
+      font-weight:800;
+    }
+
+    .insight h3{
+      font-family:"Playfair Display",serif;
+      font-size:23px;
+      margin:12px 0;
+    }
+
+    .insight p{
+      color:var(--muted);
+      font-size:13px;
+    }
+
+    .insight-link{
+      display:inline-block;
+      color:var(--gold2);
+      margin-top:17px;
+      font-size:12px;
+      font-weight:700;
+    }
+
+    /* ================= SOCIAL ================= */
+
+    .social-grid{
+      grid-template-columns:repeat(4,1fr);
+    }
+
+    .social-card{
+      padding:25px;
+      text-align:center;
+      transition:.25s;
+    }
+
+    .social-card:hover{
+      border-color:rgba(212,175,55,.30);
+      transform:translateY(-3px);
+    }
+
+    .social-icon{
+      color:var(--gold2);
+      font-size:25px;
+      margin-bottom:8px;
+    }
+
+    .social-card strong{
+      display:block;
+    }
+
+    .social-card span{
+      color:var(--muted);
+      font-size:12px;
+    }
+
+    /* ================= CONTACT ================= */
+
+    .contact-grid{
+      grid-template-columns:1fr 1fr;
+    }
+
+    .contact-card{
+      padding:35px;
+    }
+
+    .contact-card h3{
+      font-family:"Playfair Display",serif;
+      font-size:31px;
+      margin-bottom:12px;
+    }
+
+    .contact-card p{
+      color:var(--muted);
+      margin-bottom:18px;
+    }
+
+    .contact-line{
+      padding:13px 0;
+      border-bottom:1px solid rgba(255,255,255,.07);
+    }
+
+    .contact-line:last-child{
+      border-bottom:0;
+    }
+
+    .contact-line small{
+      color:var(--gold2);
+      display:block;
+      font-size:10px;
+      letter-spacing:.14em;
+      text-transform:uppercase;
+    }
+
+    /* ================= FOOTER ================= */
+
+    footer{
+      padding:55px 0 30px;
+      border-top:1px solid rgba(255,255,255,.07);
+      background:#030a13;
+    }
+
+    .footer-grid{
+      display:grid;
+      grid-template-columns:1.2fr .8fr .8fr;
+      gap:35px;
+      padding-bottom:35px;
+      border-bottom:1px solid rgba(255,255,255,.07);
+    }
+
+    .footer-brand{
+      font-family:"Playfair Display",serif;
+      font-size:27px;
+      color:var(--gold2);
+      margin-bottom:10px;
+    }
+
+    .footer-col h4{
+      margin-bottom:12px;
+      color:#e9edf3;
+    }
+
+    .footer-col a,
+    .footer-col p{
+      display:block;
+      color:var(--muted);
+      font-size:13px;
+      margin:6px 0;
+    }
+
+    .footer-col a:hover{
+      color:var(--gold2);
+    }
+
+    .disclaimer{
+      padding-top:25px;
+      color:#778496;
+      font-size:11px;
+      line-height:1.7;
+    }
+
+    .copyright{
+      margin-top:20px;
+      color:#667487;
+      font-size:11px;
+    }
+
+    /* ================= RESPONSIVE ================= */
+
+    @media(max-width:1000px){
+
+      .division-grid{
+        grid-template-columns:repeat(2,1fr);
+      }
+
+      .approach-grid{
+        grid-template-columns:repeat(3,1fr);
+      }
+
+      .social-grid{
+        grid-template-columns:repeat(2,1fr);
+      }
+
+      .stats-grid{
+        grid-template-columns:repeat(2,1fr);
+      }
+
+      .stat-box:nth-child(2){
+        border-right:0;
+      }
+    }
+
+    @media(max-width:800px){
+
+      section{
+        padding:80px 0;
+      }
+
+      .hero{
+        min-height:auto;
+        padding-top:145px;
+        padding-bottom:80px;
+      }
+
+      .hero h1{
+        font-size:54px;
+      }
+
+      .hero-stats{
+        grid-template-columns:1fr;
+      }
+
+      .hero-stat,
+      .hero-stat:nth-child(2),
+      .hero-stat:last-child{
+        padding:17px 0;
+        border-right:0;
+        border-bottom:1px solid rgba(255,255,255,.07);
+      }
+
+      .hero-stat:last-child{
+        border-bottom:0;
+      }
+
+      .about-grid,
+      .private-grid,
+      .educare-grid,
+      .founder-grid,
+      .contact-grid,
+      .featured-grid{
+        grid-template-columns:1fr;
+      }
+
+      .division-grid{
+        grid-template-columns:1fr 1fr;
+      }
+
+      .market-grid{
+        grid-template-columns:repeat(2,1fr);
+      }
+
+      .approach-grid{
+        grid-template-columns:repeat(2,1fr);
+      }
+
+      .insights-grid{
+        grid-template-columns:1fr 1fr;
+      }
+
+      .footer-grid{
+        grid-template-columns:1fr 1fr;
+      }
+    }
+
+    @media(max-width:560px){
+
+      .nav-inner{
+        height:70px;
+      }
+
+      .brand-tag{
+        display:none;
+      }
+
+      .brand-name{
+        font-size:13px;
+      }
+
+      .brand-logo{
+        width:43px;
+        height:43px;
+      }
+
+      .hero h1{
+        font-size:45px;
+      }
+
+      .hero-description{
+        font-size:16px;
+      }
+
+      h2{
+        font-size:40px;
+      }
+
+      .stats-grid,
+      .division-grid,
+      .market-grid,
+      .approach-grid,
+      .insights-grid,
+      .social-grid{
+        grid-template-columns:1fr;
+      }
+
+      .stat-box{
+        border-right:0;
+        border-bottom:1px solid rgba(255,255,255,.07);
+      }
+
+      .stat-box:last-child{
+        border-bottom:0;
+      }
+
+      .edu-topics{
+        grid-template-columns:1fr;
+      }
+
+      .footer-grid{
+        grid-template-columns:1fr;
+      }
+
+      .featured-card,
+      .private-panel,
+      .edu-main,
+      .edu-side,
+      .contact-card{
+        padding:27px;
+      }
+    }
+  </style>
+</head>
+
+<body>
+
+  <!-- ================= HEADER ================= -->
+
+  <header class="topbar" id="topbar">
+    <div class="nav-inner">
+
+      <a href="#home" class="brand">
+
+        <svg class="brand-logo" viewBox="0 0 100 100" aria-label="Bikusura Group Logo">
+          <defs>
+            <linearGradient id="goldGradient" x1="0" y1="0" x2="1" y2="1">
+              <stop offset="0%" stop-color="#f1d477"/>
+              <stop offset="50%" stop-color="#d4af37"/>
+              <stop offset="100%" stop-color="#9f7b19"/>
+            </linearGradient>
+          </defs>
+
+          <circle cx="50" cy="50" r="45" fill="#07111f" stroke="url(#goldGradient)" stroke-width="4"/>
+          <circle cx="50" cy="50" r="36" fill="none" stroke="rgba(241,212,119,.35)" stroke-width="1"/>
+          <text x="50" y="67"
+                text-anchor="middle"
+                font-family="Georgia,serif"
+                font-size="54"
+                font-weight="700"
+                fill="url(#goldGradient)">B</text>
+        </svg>
+
+        <span class="brand-text">
+          <span class="brand-name">BIKUSURA GROUP</span>
+          <span class="brand-tag">BUILDING WEALTH • CREATING LEGACY</span>
+        </span>
+
+      </a>
+
+      <button class="menu-btn" id="openMenu" aria-label="Open menu">
+        <span></span>
+        <span></span>
+        <span></span>
+      </button>
+
+    </div>
+  </header>
+
+  <!-- ================= MENU ================= -->
+
+  <div class="menu-backdrop" id="menuBackdrop"></div>
+
+  <aside class="side-menu" id="sideMenu">
+
+    <div class="menu-head">
+      <div class="menu-title">Bikusura Group</div>
+
+      <button class="close-btn" id="closeMenu" aria-label="Close menu">
+        ×
+      </button>
+    </div>
+
+    <nav class="side-links">
+
+      <a href="#home">Home</a>
+      <a href="#about">About</a>
+      <a href="#businesses">Businesses</a>
+      <a href="#private">Private Venture</a>
+      <a href="#educare">Bikusura EduCare</a>
+      <a href="#global">Global Vision</a>
+      <a href="#insights">Insights</a>
+      <a href="Bikusura_Daily_Market_Updates.html">Daily Market Updates</a>
+      <a href="#contact">Contact</a>
+
+    </nav>
+
+    <div class="menu-contact">
+      <small>Official Email</small>
+      <a href="mailto:groupbikusura@gmail.com" class="gold">
+        groupbikusura@gmail.com
+      </a>
+    </div>
+
+  </aside>
+
+  <!-- ================= HERO ================= -->
+
+  <main>
+
+    <section class="hero" id="home">
+      <div class="container">
+
+        <div class="hero-content">
+
+          <div class="eyebrow">Bikusura Group</div>
+
+          <h1>
+            Building Wealth.<br>
+            <span>Creating Legacy.</span>
+          </h1>
+
+          <p class="hero-description">
+            Bikusura Group is a diversified family-led business and investment
+            group focused on disciplined capital allocation, global opportunities,
+            education, private ventures and long-term value creation.
+          </p>
+
+          <div class="btns">
+            <a href="#businesses" class="btn btn-primary">
+              Explore Bikusura
+            </a>
+
+            <a href="#contact" class="btn btn-outline">
+              Connect With Us
+            </a>
+          </div>
+
+          <div class="hero-stats">
+
+            <div class="hero-stat">
+              <strong>7 Strategic Verticals</strong>
+              <span>Diversified business ecosystem</span>
+            </div>
+
+            <div class="hero-stat">
+              <strong>Global Perspective</strong>
+              <span>Markets, assets and opportunities</span>
+            </div>
+
+            <div class="hero-stat">
+              <strong>Long-Term Value</strong>
+              <span>Built through discipline and compounding</span>
+            </div>
+
+          </div>
+
+        </div>
+
+      </div>
+    </section>
+
+    <!-- ================= STATS ================= -->
+
+    <div class="stats">
+
+      <div class="container">
+
+        <div class="grid stats-grid">
+
+          <div class="stat-box">
+            <div class="stat-number">07</div>
+            <div class="stat-label">Strategic Business Verticals</div>
+          </div>
+
+          <div class="stat-box">
+            <div class="stat-number">Global</div>
+            <div class="stat-label">Markets & Opportunities</div>
+          </div>
+
+          <div class="stat-box">
+            <div class="stat-number">Multi</div>
+            <div class="stat-label">Asset Diversification Framework</div>
+          </div>
+
+          <div class="stat-box">
+            <div class="stat-number">Long-Term</div>
+            <div class="stat-label">Value Creation Mindset</div>
+          </div>
+
+        </div>
+
+      </div>
+
+    </div>
+
+    <!-- ================= ABOUT ================= -->
+
+    <section id="about">
+
+      <div class="container">
+
+        <div class="section-head">
+          <div class="eyebrow">About Bikusura</div>
+
+          <h2>Think beyond today.</h2>
+
+          <p class="lead">
+            Wealth is not simply about accumulation. It is about building
+            systems, knowledge, businesses and assets that can create value
+            for years to come.
+          </p>
+        </div>
+
+        <div class="grid about-grid">
+
+          <div class="about-text">
+
+            <p>
+              Bikusura Group follows a long-term approach to capital,
+              business and education. The Group brings together multiple
+              strategic verticals under one unified vision.
+            </p>
+
+            <p>
+              Our philosophy is based on thoughtful research, disciplined
+              decisions, diversification and continuous learning.
+            </p>
+
+            <p>
+              We believe meaningful wealth creation requires patience,
+              responsible risk management and the ability to think beyond
+              short-term market cycles.
+            </p>
+
+            <div class="btns">
+              <a href="#businesses" class="btn btn-outline">
+                Explore Our Divisions
+              </a>
+            </div>
+
+          </div>
+
+          <div class="card framework">
+
+            <div class="framework-title">
+              Capital. Knowledge. Business. Compounding.
+            </div>
+
+            <div class="framework-item">
+              <div class="framework-number">01</div>
+              <div>
+                <strong>Long-Term Perspective</strong>
+                <span>Focus on sustainable value rather than short-term noise.</span>
+              </div>
+            </div>
+
+            <div class="framework-item">
+              <div class="framework-number">02</div>
+              <div>
+                <strong>Disciplined Decisions</strong>
+                <span>Research and risk awareness before capital allocation.</span>
+              </div>
+            </div>
+
+            <div class="framework-item">
+              <div class="framework-number">03</div>
+              <div>
+                <strong>Diversification</strong>
+                <span>Multiple asset classes and business opportunities.</span>
+              </div>
+            </div>
+
+            <div class="framework-item">
+              <div class="framework-number">04</div>
+              <div>
+                <strong>Continuous Learning</strong>
+                <span>Knowledge as a permanent competitive advantage.</span>
+              </div>
+            </div>
+
+            <div class="framework-item">
+              <div class="framework-number">05</div>
+              <div>
+                <strong>Compounding</strong>
+                <span>Allowing quality assets, businesses and knowledge to grow.</span>
+              </div>
+            </div>
+
+          </div>
+
+        </div>
+
+      </div>
+
+    </section>
+
+    <!-- ================= BUSINESSES ================= -->
+
+    <section id="businesses">
+
+      <div class="container">
+
+        <div class="section-head">
+          <div class="eyebrow">Our Businesses</div>
+
+          <h2>Seven strategic divisions.</h2>
+
+          <p class="lead">
+            Each division serves a distinct purpose while contributing to
+            the broader Bikusura Group vision.
+          </p>
+        </div>
+
+        <div class="grid division-grid">
+
+          <!-- 01 -->
+          <div class="card division">
+            <div class="division-number">01 / CAPITAL</div>
+
+            <h3>Bikusura Capital</h3>
+
+            <p>
+              Focused on equity markets, investment opportunities,
+              research-driven capital allocation and long-term portfolio growth.
+            </p>
+
+            <div class="division-tag">CAPITAL • MARKETS • INVESTMENT</div>
+          </div>
+
+          <!-- 02 -->
+          <div class="card division">
+            <div class="division-number">02 / REAL ESTATE</div>
+
+            <h3>Bikusura Real Estate</h3>
+
+            <p>
+              Exploring property, land and real estate opportunities
+              with a long-term value creation perspective.
+            </p>
+
+            <div class="division-tag">PROPERTY • LAND • VALUE</div>
+          </div>
+
+          <!-- 03 -->
+          <div class="card division">
+            <div class="division-number">03 / DIGITAL ASSETS</div>
+
+            <h3>Bikusura Digital Assets</h3>
+
+            <p>
+              Focused on the evolving digital economy, blockchain,
+              cryptocurrency and emerging digital asset opportunities.
+            </p>
+
+            <div class="division-tag">DIGITAL • BLOCKCHAIN • FUTURE</div>
+          </div>
+
+          <!-- 04 -->
+          <div class="card division">
+            <div class="division-number">04 / PRECIOUS METALS</div>
+
+            <h3>Bikusura Precious Metals</h3>
+
+            <p>
+              Exposure to gold, silver and precious metal opportunities
+              as part of a diversified wealth framework.
+            </p>
+
+            <div class="division-tag">GOLD • SILVER • PRESERVATION</div>
+          </div>
+
+          <!-- 05 -->
+          <div class="card division">
+            <div class="division-number">05 / RETIREMENT</div>
+
+            <h3>Bikusura Retirement Assets</h3>
+
+            <p>
+              Building long-term financial security through retirement
+              assets and disciplined wealth accumulation strategies.
+            </p>
+
+            <div class="division-tag">RETIREMENT • SECURITY • FUTURE</div>
+          </div>
+
+          <!-- 06 -->
+          <div class="card division">
+            <div class="division-number">06 / EDUCARE</div>
+
+            <h3>Bikusura EduCare</h3>
+
+            <p>
+              Education, tutoring, competitive examination preparation,
+              nursing guidance and career development.
+            </p>
+
+            <div class="division-tag">EDUCATION • GUIDANCE • CAREER</div>
+          </div>
+
+          <!-- 07 -->
+          <div class="card division">
+            <div class="division-number">07 / PRIVATE VENTURE</div>
+
+            <h3>Bikusura Private Venture</h3>
+
+            <p>
+              Identifying and developing promising private businesses,
+              entrepreneurial opportunities and strategic ventures.
+            </p>
+
+            <div class="division-tag">BUSINESS • ENTREPRENEURSHIP • VENTURE</div>
+          </div>
+
+        </div>
+
+      </div>
+
+    </section>
+
+    <!-- ================= FEATURED ================= -->
+
+    <section>
+
+      <div class="container">
+
+        <div class="section-head">
+          <div class="eyebrow">Featured Initiatives</div>
+
+          <h2>Building for the long term.</h2>
+        </div>
+
+        <div class="grid featured-grid">
+
+          <div class="card featured-card highlight">
+
+            <div class="featured-label">
+              Wealth Creation Framework
+            </div>
+
+            <div class="roadmap-number">₹1 Crore</div>
+
+            <h3>Long-Term Wealth Roadmap</h3>
+
+            <p>
+              A disciplined wealth-building framework focused on regular
+              investing, long-term compounding and financial consistency.
+            </p>
+
+            <div class="btns">
+              <a href="#contact" class="btn btn-outline">
+                Learn More
+              </a>
+            </div>
+
+          </div>
+
+          <div class="card featured-card">
+
+            <div class="featured-label">
+              Entrepreneurship
+            </div>
+
+            <h3>Bikusura Private Venture</h3>
+
+            <p>
+              A dedicated vertical for exploring private businesses,
+              entrepreneurial opportunities, strategic partnerships and
+              future ventures.
+            </p>
+
+            <div class="btns">
+              <a href="#private" class="btn btn-outline">
+                Explore Venture
+              </a>
+            </div>
+
+          </div>
+
+        </div>
+
+      </div>
+
+    </section>
+
+    <!-- ================= PRIVATE VENTURE ================= -->
+
+    <section class="private-section" id="private">
+
+      <div class="container">
+
+        <div class="grid private-grid">
+
+          <div>
+
+            <div class="eyebrow">Bikusura Private Venture</div>
+
+            <h2>Ideas into businesses.</h2>
+
+            <p class="lead">
+              Building and supporting private ventures with a focus on
+              sustainable business models, entrepreneurial thinking and
+              long-term value creation.
+            </p>
+
+          </div>
+
+          <div class="card private-panel">
+
+            <h3>Venture Philosophy</h3>
+
+            <p>
+              Bikusura Private Venture aims to identify opportunities where
+              capital, business knowledge and execution can work together.
+            </p>
+
+            <div class="check-list">
+
+              <div class="check">
+                <b>✓</b>
+                <span>Evaluate business fundamentals and opportunity size.</span>
+              </div>
+
+              <div class="check">
+                <b>✓</b>
+                <span>Focus on sustainable and scalable business models.</span>
+              </div>
+
+              <div class="check">
+                <b>✓</b>
+                <span>Build strategic partnerships and entrepreneurial ecosystems.</span>
+              </div>
+
+              <div class="check">
+                <b>✓</b>
+                <span>Create long-term value through responsible growth.</span>
+              </div>
+
+            </div>
+
+          </div>
+
+        </div>
+
+      </div>
+
+    </section>
+
+    <!-- ================= EDUCARE ================= -->
+
+    <section class="educare" id="educare">
+
+      <div class="container">
+
+        <div class="section-head">
+
+          <div class="eyebrow">Bikusura EduCare</div>
+
+          <h2>Knowledge creates opportunity.</h2>
+
+          <p class="lead">
+            Education, preparation and career guidance designed to help
+            learners build confidence and move toward their goals.
+          </p>
+
+        </div>
+
+        <div class="grid educare-grid">
+
+          <div class="card edu-main">
+
+            <div class="edu-logo">
+
+              <div class="cap-logo">🎓</div>
+
+              <div>
+                <div class="edu-name">BIKUSURA EduCare</div>
+                <div class="edu-tagline">
+                  LEARN • PREPARE • SUCCEED
+                </div>
+              </div>
+
+            </div>
+
+            <p>
+              Bikusura EduCare is the education and career development
+              division of Bikusura Group, focused on learning support,
+              tutoring, competitive preparation and career guidance.
+            </p>
+
+            <div class="grid edu-topics">
+
+              <div class="edu-topic">
+                <strong>Mathematics</strong>
+                <span>Conceptual learning and academic support</span>
+              </div>
+
+              <div class="edu-topic">
+                <strong>Science</strong>
+                <span>Clear concepts and exam preparation</span>
+              </div>
+
+              <div class="edu-topic">
+                <strong>English Grammar</strong>
+                <span>Communication and language development</span>
+              </div>
+
+              <div class="edu-topic">
+                <strong>Career Guidance</strong>
+                <span>Direction, planning and opportunity awareness</span>
+              </div>
+
+            </div>
+
+          </div>
+
+          <div class="card edu-side">
+
+            <h3>Education • Guidance • Career</h3>
+
+            <p>
+              From school-level tutoring to competitive examination
+              preparation and professional guidance, EduCare aims to
+              create a practical learning ecosystem.
+            </p>
+
+            <div class="edu-motto">
+              Learn with clarity. Prepare with discipline.
+              Succeed with confidence.
+            </div>
+
+            <div class="btns">
+              <a href="#contact" class="btn btn-primary">
+                Contact EduCare
+              </a>
+            </div>
+
+          </div>
+
+        </div>
+
+      </div>
+
+    </section>
+
+    <!-- ================= GLOBAL ================= -->
+
+    <section id="global">
+
+      <div class="container">
+
+        <div class="section-head">
+
+          <div class="eyebrow">Global Vision</div>
+
+          <h2>Think beyond one market.</h2>
+
+          <p class="lead">
+            Bikusura Group maintains a global investment perspective,
+            recognizing that opportunities can emerge across geographies,
+            industries and asset classes.
+          </p>
+
+        </div>
+
+        <div class="card global-box">
+
+          <p>
+            Our global perspective includes developed and emerging markets,
+            while emphasizing research, diversification, responsible risk
+            management and long-term opportunity assessment.
+          </p>
+
+          <div class="grid market-grid">
+
+            <div class="market">
+              <strong>India</strong>
+              <span>CORE MARKET</span>
+            </div>
+
+            <div class="market">
+              <strong>United States</strong>
+              <span>GLOBAL MARKET</span>
+            </div>
+
+            <div class="market">
+              <strong>China</strong>
+              <span>ASIA</span>
+            </div>
+
+            <div class="market">
+              <strong>Japan</strong>
+              <span>ASIA</span>
+            </div>
+
+            <div class="market">
+              <strong>Taiwan</strong>
+              <span>ASIA</span>
+            </div>
+
+            <div class="market">
+              <strong>Europe</strong>
+              <span>GLOBAL MARKET</span>
+            </div>
+
+          </div>
+
+        </div>
+
+      </div>
+
+    </section>
+
+    <!-- ================= APPROACH ================= -->
+
+    <section>
+
+      <div class="container">
+
+        <div class="section-head">
+
+          <div class="eyebrow">Our Approach</div>
+
+          <h2>Research. Build. Compound.</h2>
+
+          <p class="lead">
+            A simple framework designed to keep decisions thoughtful,
+            disciplined and focused on long-term outcomes.
+          </p>
+
+        </div>
+
+        <div class="grid approach-grid">
+
+          <div class="card approach">
+            <div class="approach-number">01</div>
+            <h3>Research</h3>
+            <p>Understand markets, businesses and opportunities.</p>
+          </div>
+
+          <div class="card approach">
+            <div class="approach-number">02</div>
+            <h3>Evaluate</h3>
+            <p>Assess quality, risk, valuation and potential.</p>
+          </div>
+
+          <div class="card approach">
+            <div class="approach-number">03</div>
+            <h3>Allocate</h3>
+            <p>Deploy capital with discipline and diversification.</p>
+          </div>
+
+          <div class="card approach">
+            <div class="approach-number">04</div>
+            <h3>Build</h3>
+            <p>Create businesses, knowledge and strategic assets.</p>
+          </div>
+
+          <div class="card approach">
+            <div class="approach-number">05</div>
+            <h3>Compound</h3>
+            <p>Allow quality decisions and assets to grow over time.</p>
+          </div>
+
+        </div>
+
+      </div>
+
+    </section>
+
+    <!-- ================= FOUNDER ================= -->
+
+    <section>
+
+      <div class="container">
+
+        <div class="grid founder-grid">
+
+          <div class="card founder-card">
+
+            <div class="founder-initial">B</div>
+
+            <h3>Bipin Kumar</h3>
+
+            <p>FOUNDER & PROMOTER</p>
+
+          </div>
+
+          <div class="founder-text">
+
+            <div class="eyebrow">Founder</div>
+
+            <h2>Vision with discipline.</h2>
+
+            <p>
+              Bikusura Group was founded with the vision of building a
+              diversified ecosystem combining investment, business,
+              education and long-term wealth creation.
+            </p>
+
+            <p>
+              The Group's philosophy is centered on learning continuously,
+              understanding opportunities deeply and building systems that
+              can create sustainable value over time.
+            </p>
+
+            <p>
+              The long-term objective is to build a strong institution
+              where capital, knowledge, entrepreneurship and opportunity
+              work together.
+            </p>
+
+          </div>
+
+        </div>
+
+      </div>
+
+    </section>
+
+    <!-- ================= INSIGHTS ================= -->
+
+    <section id="insights">
+
+      <div class="container">
+
+        <div class="section-head">
+
+          <div class="eyebrow">Insights</div>
+
+          <h2>Think. Learn. Grow.</h2>
+
+          <p class="lead">
+            Perspectives on markets, businesses, wealth creation,
+            education and long-term thinking.
+          </p>
+
+        </div>
+
+        <div class="grid insights-grid">
+
+          <div class="card insight">
+            <div class="insight-number">01</div>
+            <h3>Understanding Market Cycles</h3>
+            <p>
+              Markets move through different phases. Understanding cycles
+              can help investors remain disciplined.
+            </p>
+          </div>
+
+          <div class="card insight">
+            <div class="insight-number">02</div>
+            <h3>Think Beyond One Market</h3>
+            <p>
+              Global diversification can broaden the opportunity set
+              across economies and industries.
+            </p>
+          </div>
+
+          <div class="card insight">
+            <div class="insight-number">03</div>
+            <h3>The Power of Compounding</h3>
+            <p>
+              Consistency and time can transform disciplined investing
+              into meaningful long-term wealth.
+            </p>
+          </div>
+
+          <div class="card insight">
+            <div class="insight-number">04</div>
+            <h3>Understanding Business Quality</h3>
+            <p>
+              Strong businesses are built around quality, competitive
+              advantages, management and sustainable economics.
+            </p>
+          </div>
+
+          <div class="card insight">
+            <div class="insight-number">05</div>
+            <h3>Learn • Prepare • Succeed</h3>
+            <p>
+              Education is one of the strongest long-term investments
+              an individual can make.
+            </p>
+          </div>
+
+          <div class="card insight">
+
+            <div class="insight-number">06</div>
+
+            <h3>Protect Capital First</h3>
+
+            <p>
+              Responsible risk management is an important part of
+              sustainable wealth creation.
+            </p>
+
+            <a
+              class="insight-link"
+              href="Bikusura_Daily_Market_Updates.html">
+              View Daily Market Updates →
+            </a>
+
+          </div>
+
+        </div>
+
+        <div class="btns">
+          <a
+            href="Bikusura_Daily_Market_Updates.html"
+            class="btn btn-primary">
+            Open Daily Market Updates
+          </a>
+        </div>
+
+      </div>
+
+    </section>
+
+    <!-- ================= SOCIAL ================= -->
+
+    <section>
+
+      <div class="container">
+
+        <div class="section-head">
+
+          <div class="eyebrow">Connect With Bikusura</div>
+
+          <h2>Follow the journey.</h2>
+
+        </div>
+
+        <div class="grid social-grid">
+
+          <a
+            class="card social-card"
+            href="https://www.instagram.com/bikusura_group/"
+            target="_blank"
+            rel="noopener">
+
+            <div class="social-icon">◎</div>
+            <strong>Instagram</strong>
+            <span>@bikusura_group</span>
+
+          </a>
+
+          <a
+            class="card social-card"
+            href="https://x.com/Bikusura_group"
+            target="_blank"
+            rel="noopener">
+
+            <div class="social-icon">𝕏</div>
+            <strong>X</strong>
+            <span>@Bikusura_group</span>
+
+          </a>
+
+          <a
+            class="card social-card"
+            href="https://www.youtube.com/@BikusuraGroup"
+            target="_blank"
+            rel="noopener">
+
+            <div class="social-icon">▶</div>
+            <strong>YouTube</strong>
+            <span>Bikusura Group</span>
+
+          </a>
+
+          <a
+            class="card social-card"
+            href="mailto:groupbikusura@gmail.com">
+
+            <div class="social-icon">✉</div>
+            <strong>Email</strong>
+            <span>groupbikusura@gmail.com</span>
+
+          </a>
+
+        </div>
+
+      </div>
+
+    </section>
+
+    <!-- ================= CONTACT ================= -->
+
+    <section id="contact">
+
+      <div class="container">
+
+        <div class="section-head">
+
+          <div class="eyebrow">Contact</div>
+
+          <h2>Let's connect.</h2>
+
+          <p class="lead">
+            For business, education, venture or general enquiries,
+            reach out to Bikusura Group.
+          </p>
+
+        </div>
+
+        <div class="grid contact-grid">
+
+          <div class="card contact-card">
+
+            <h3>Bikusura Group</h3>
+
+            <p>
+              Building Wealth • Creating Legacy
+            </p>
+
+            <div class="contact-line">
+              <small>Email</small>
+              <a href="mailto:groupbikusura@gmail.com">
+                groupbikusura@gmail.com
+              </a>
+            </div>
+
+            <div class="contact-line">
+              <small>Phone</small>
+              <a href="tel:+917029641625">
+                +91 7029641625
+              </a>
+            </div>
+
+          </div>
+
+          <div class="card contact-card">
+
+            <h3>Explore Our Ecosystem</h3>
+
+            <p>
+              Discover our seven strategic divisions and long-term vision.
+            </p>
+
+            <div class="btns">
+
+              <a href="#businesses" class="btn btn-primary">
+                Our Divisions
+              </a>
+
+              <a href="#educare" class="btn btn-outline">
+                EduCare
+              </a>
+
+            </div>
+
+          </div>
+
+        </div>
+
+      </div>
+
+    </section>
+
+  </main>
+
+  <!-- ================= FOOTER ================= -->
+
+  <footer>
+
+    <div class="container">
+
+      <div class="footer-grid">
+
+        <div class="footer-col">
+
+          <div class="footer-brand">
+            Bikusura Group
+          </div>
+
+          <p>
+            Building Wealth • Creating Legacy
+          </p>
+
+          <p>
+            A diversified group focused on capital, business,
+            education and long-term value creation.
+          </p>
+
+        </div>
+
+        <div class="footer-col">
+
+          <h4>Explore</h4>
+
+          <a href="#about">About</a>
+          <a href="#businesses">Businesses</a>
+          <a href="#private">Private Venture</a>
+          <a href="#educare">EduCare</a>
+          <a href="#global">Global Vision</a>
+          <a href="#insights">Insights</a>
+
+        </div>
+
+        <div class="footer-col">
+
+          <h4>Connect</h4>
+
+          <a href="mailto:groupbikusura@gmail.com">
+            groupbikusura@gmail.com
+          </a>
+
+          <a href="https://www.instagram.com/bikusura_group/" target="_blank" rel="noopener">
+            Instagram
+          </a>
+
+          <a href="https://x.com/Bikusura_group" target="_blank" rel="noopener">
+            X
+          </a>
+
+          <a href="https://www.youtube.com/@BikusuraGroup" target="_blank" rel="noopener">
+            YouTube
+          </a>
+
+        </div>
+
+      </div>
+
+      <div class="disclaimer">
+
+        <strong>Disclaimer:</strong>
+        Information presented on this website is for general informational
+        and educational purposes only. Nothing on this website should be
+        considered investment, financial, legal or tax advice. Investment
+        decisions involve risk and should be made after independent research
+        and, where appropriate, consultation with qualified professionals.
+
+        <div class="copyright">
+          © 2026 Bikusura Group. All Rights Reserved.
+        </div>
+
+      </div>
+
+    </div>
+
+  </footer>
+
+  <!-- ================= JAVASCRIPT ================= -->
+
+  <script>
+
+    const openMenu = document.getElementById("openMenu");
+    const closeMenu = document.getElementById("closeMenu");
+    const menuBackdrop = document.getElementById("menuBackdrop");
+    const sideMenuLinks = document.querySelectorAll(".side-links a");
+    const topbar = document.getElementById("topbar");
+
+    function showMenu(){
+      document.body.classList.add("menu-open");
+    }
+
+    function hideMenu(){
+      document.body.classList.remove("menu-open");
+    }
+
+    openMenu.addEventListener("click", showMenu);
+    closeMenu.addEventListener("click", hideMenu);
+    menuBackdrop.addEventListener("click", hideMenu);
+
+    sideMenuLinks.forEach(link => {
+      link.addEventListener("click", hideMenu);
+    });
+
+    document.addEventListener("keydown", function(event){
+      if(event.key === "Escape"){
+        hideMenu();
+      }
+    });
+
+    window.addEventListener("scroll", function(){
+      if(window.scrollY > 25){
+        topbar.classList.add("scrolled");
+      }else{
+        topbar.classList.remove("scrolled");
+      }
+    });
+
+  </script>
+
+</body>
+</html>
