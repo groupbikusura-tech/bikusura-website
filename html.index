@@ -185,6 +185,14 @@ nav{
     color:var(--gold2)!important;
 }
 
+<ul class="nav-links">
+    <li><a href="#about">About</a></li>
+    <li><a href="#businesses">Businesses</a></li>
+    <li><a href="#educare">EduCare</a></li>
+    <li><a href="Bikusura_Daily_Market_Updates.html">Market Updates</a></li>
+    <li><a href="#contact">Contact</a></li>
+</ul>
+
 /* ================= HERO ================= */
 
 .hero{
