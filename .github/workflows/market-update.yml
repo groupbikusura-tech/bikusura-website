@@ -2,7 +2,8 @@ name: Bikusura Daily Market Update
 
 on:
   schedule:
-    - cron: "30 3 * * 1-5"
+    # 4:00 PM IST = 10:30 UTC
+    - cron: "30 10 * * 1-5"
   workflow_dispatch:
 
 permissions:
@@ -22,13 +23,15 @@ jobs:
           python-version: "3.12"
 
       - name: Install market data library
-        run: pip install yfinance
+        run: pip install --upgrade yfinance
 
       - name: Generate Daily Market Update
         run: |
           python <<'PY'
           import yfinance as yf
           from datetime import datetime, timezone, timedelta
+          import sys
+          import time
 
           IST = timezone(timedelta(hours=5, minutes=30))
           now = datetime.now(IST)
@@ -48,22 +51,39 @@ jobs:
               "USD/INR": "INR=X",
               "Brent Crude": "BZ=F",
               "WTI Crude": "CL=F",
-              "Spot Gold": "GC=F",
-              "Spot Silver": "SI=F"
+              "Gold": "GC=F",
+              "Silver": "SI=F"
           }
 
           def get_data(symbol):
-              try:
-                  data = yf.Ticker(symbol).history(period="5d", interval="1d")
-                  data = data.dropna(subset=["Close"])
-                  if len(data) == 0:
-                      return None, None
-                  close = float(data["Close"].iloc[-1])
-                  previous = float(data["Close"].iloc[-2]) if len(data) > 1 else close
-                  change = ((close - previous) / previous) * 100 if previous else 0
-                  return close, change
-              except Exception:
-                  return None, None
+              for attempt in range(3):
+                  try:
+                      data = yf.Ticker(symbol).history(
+                          period="5d",
+                          interval="1d",
+                          auto_adjust=False
+                      )
+
+                      data = data.dropna(subset=["Close"])
+
+                      if len(data) == 0:
+                          raise ValueError("No market data returned")
+
+                      close = float(data["Close"].iloc[-1])
+
+                      if len(data) > 1:
+                          previous = float(data["Close"].iloc[-2])
+                          change = ((close - previous) / previous) * 100
+                      else:
+                          change = 0
+
+                      return close, change
+
+                  except Exception as e:
+                      print(f"{symbol}: attempt {attempt + 1} failed: {e}")
+                      time.sleep(3)
+
+              return None, None
 
           def fmt(value, decimals=2):
               if value is None:
@@ -93,9 +113,29 @@ jobs:
               </div>
               """
 
+          print("Fetching market data...")
+
           data = {}
+
           for name, symbol in tickers.items():
+              print(f"Fetching {name}...")
               data[name] = get_data(symbol)
+
+          # Critical Indian market data must exist
+          critical = [
+              "Sensex",
+              "Nifty 50",
+              "Nifty Bank"
+          ]
+
+          missing = [
+              name for name in critical
+              if data[name][0] is None
+          ]
+
+          if missing:
+              print("ERROR: Missing critical market data:", missing)
+              sys.exit(1)
 
           def val(name):
               return data[name][0]
@@ -108,9 +148,11 @@ jobs:
           <head>
           <meta charset="UTF-8">
           <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
           <title>Bikusura Group | Daily Market Updates - {date_text.title()}</title>
 
           <style>
+
           :root{{
             --navy:#071a33;
             --navy2:#0d2748;
@@ -124,7 +166,11 @@ jobs:
             --border:rgba(212,175,55,.28);
           }}
 
-          *{{margin:0;padding:0;box-sizing:border-box}}
+          *{{
+            margin:0;
+            padding:0;
+            box-sizing:border-box;
+          }}
 
           body{{
             font-family:Arial,Helvetica,sans-serif;
@@ -170,9 +216,20 @@ jobs:
             margin:30px auto 60px;
           }}
 
-          .intro{text-align:center;margin-bottom:28px}
-          .intro h1{{font-size:30px;margin-bottom:8px}}
-          .intro p{{color:var(--muted);font-size:14px}}
+          .intro{{
+            text-align:center;
+            margin-bottom:28px;
+          }}
+
+          .intro h1{{
+            font-size:30px;
+            margin-bottom:8px;
+          }}
+
+          .intro p{{
+            color:var(--muted);
+            font-size:14px;
+          }}
 
           .snapshot{{
             background:rgba(212,175,55,.08);
@@ -185,7 +242,9 @@ jobs:
             font-size:13px;
           }}
 
-          .section{{margin-top:28px}}
+          .section{{
+            margin-top:28px;
+          }}
 
           .section-title{{
             display:flex;
@@ -201,7 +260,10 @@ jobs:
             border-radius:5px;
           }}
 
-          .section-title h2{{font-size:20px;letter-spacing:.5px}}
+          .section-title h2{{
+            font-size:20px;
+            letter-spacing:.5px;
+          }}
 
           .grid{{
             display:grid;
@@ -242,9 +304,17 @@ jobs:
             font-weight:700;
           }}
 
-          .up{{color:var(--green)}}
-          .down{{color:var(--red)}}
-          .neutral{{color:var(--gold2)}}
+          .up{{
+            color:var(--green);
+          }}
+
+          .down{{
+            color:var(--red);
+          }}
+
+          .neutral{{
+            color:var(--gold2);
+          }}
 
           .note{{
             margin-top:8px;
@@ -256,7 +326,11 @@ jobs:
             margin-top:28px;
             padding:24px;
             border-radius:18px;
-            background:linear-gradient(145deg,rgba(212,175,55,.12),rgba(255,255,255,.035));
+            background:linear-gradient(
+              145deg,
+              rgba(212,175,55,.12),
+              rgba(255,255,255,.035)
+            );
             border:1px solid var(--border);
           }}
 
@@ -279,7 +353,9 @@ jobs:
             font-size:12px;
           }}
 
-          .footer strong{{color:var(--gold2)}}
+          .footer strong{{
+            color:var(--gold2);
+          }}
 
           .disclaimer{{
             margin-top:10px;
@@ -289,133 +365,297 @@ jobs:
           }}
 
           @media(max-width:600px){{
-            .intro h1{{font-size:24px}}
-            .logo{{font-size:24px}}
-            .value{{font-size:21px}}
+            .intro h1{{
+              font-size:24px;
+            }}
+
+            .logo{{
+              font-size:24px;
+            }}
+
+            .value{{
+              font-size:21px;
+            }}
           }}
+
           </style>
           </head>
 
           <body>
 
           <header>
-            <div class="logo">BIKUSURA GROUP</div>
-            <div class="tagline">BUILDING WEALTH • CREATING LEGACY</div>
-            <div class="date">{date_text}</div>
+
+            <div class="logo">
+              BIKUSURA GROUP
+            </div>
+
+            <div class="tagline">
+              BUILDING WEALTH • CREATING LEGACY
+            </div>
+
+            <div class="date">
+              {date_text}
+            </div>
+
           </header>
 
           <main class="container">
 
           <div class="intro">
-            <h1>Daily Market Updates</h1>
-            <p>Global & Indian Market Snapshot</p>
+
+            <h1>
+              Daily Market Updates
+            </h1>
+
+            <p>
+              Global & Indian Market Snapshot
+            </p>
+
           </div>
 
           <div class="snapshot">
+
             Automatically updated market data • Latest available market snapshot
+
           </div>
 
           <section class="section">
+
             <div class="section-title">
               <span></span>
               <h2>Global Indices</h2>
             </div>
 
             <div class="grid">
-          {card("Nikkei 225 • Japan", fmt(val("Nikkei 225")), chg("Nikkei 225"), "Latest available")}
-          {card("KOSPI • South Korea", fmt(val("KOSPI")), chg("KOSPI"), "Latest available")}
-          {card("Shanghai Composite • China", fmt(val("Shanghai Composite")), chg("Shanghai Composite"), "Latest available")}
-          {card("Hang Seng • Hong Kong", fmt(val("Hang Seng")), chg("Hang Seng"), "Latest available")}
-          {card("Dow Jones • USA", fmt(val("Dow Jones")), chg("Dow Jones"), "Latest U.S. close")}
-          {card("S&P 500 • USA", fmt(val("S&P 500")), chg("S&P 500"), "Latest U.S. close")}
-          {card("NASDAQ • USA", fmt(val("NASDAQ")), chg("NASDAQ"), "Latest U.S. close")}
+
+              {card(
+                  "Nikkei 225 • Japan",
+                  fmt(val("Nikkei 225")),
+                  chg("Nikkei 225"),
+                  "Latest available"
+              )}
+
+              {card(
+                  "KOSPI • South Korea",
+                  fmt(val("KOSPI")),
+                  chg("KOSPI"),
+                  "Latest available"
+              )}
+
+              {card(
+                  "Shanghai Composite • China",
+                  fmt(val("Shanghai Composite")),
+                  chg("Shanghai Composite"),
+                  "Latest available"
+              )}
+
+              {card(
+                  "Hang Seng • Hong Kong",
+                  fmt(val("Hang Seng")),
+                  chg("Hang Seng"),
+                  "Latest available"
+              )}
+
+              {card(
+                  "Dow Jones • USA",
+                  fmt(val("Dow Jones")),
+                  chg("Dow Jones"),
+                  "Latest U.S. close"
+              )}
+
+              {card(
+                  "S&P 500 • USA",
+                  fmt(val("S&P 500")),
+                  chg("S&P 500"),
+                  "Latest U.S. close"
+              )}
+
+              {card(
+                  "NASDAQ • USA",
+                  fmt(val("NASDAQ")),
+                  chg("NASDAQ"),
+                  "Latest U.S. close"
+              )}
+
             </div>
+
           </section>
 
           <section class="section">
+
             <div class="section-title">
               <span></span>
               <h2>Indian Market</h2>
             </div>
 
             <div class="grid">
-          {card("Sensex", fmt(val("Sensex")), chg("Sensex"), "Latest available")}
-          {card("Nifty 50", fmt(val("Nifty 50")), chg("Nifty 50"), "Latest available")}
-          {card("Nifty Bank", fmt(val("Nifty Bank")), chg("Nifty Bank"), "Latest available")}
+
+              {card(
+                  "Sensex",
+                  fmt(val("Sensex")),
+                  chg("Sensex"),
+                  "Latest available"
+              )}
+
+              {card(
+                  "Nifty 50",
+                  fmt(val("Nifty 50")),
+                  chg("Nifty 50"),
+                  "Latest available"
+              )}
+
+              {card(
+                  "Nifty Bank",
+                  fmt(val("Nifty Bank")),
+                  chg("Nifty Bank"),
+                  "Latest available"
+              )}
+
             </div>
+
           </section>
 
           <section class="section">
+
             <div class="section-title">
               <span></span>
               <h2>INR / Dollar</h2>
             </div>
 
             <div class="grid">
-          {card("USD / INR", "₹" + fmt(val("USD/INR")), chg("USD/INR"), "USD per INR conversion")}
+
+              {card(
+                  "USD / INR",
+                  "₹" + fmt(val("USD/INR")),
+                  chg("USD/INR"),
+                  "USD per INR"
+              )}
+
             </div>
+
           </section>
 
           <section class="section">
+
             <div class="section-title">
               <span></span>
               <h2>Crude Oil</h2>
             </div>
 
             <div class="grid">
-          {card("Brent Crude", "$" + fmt(val("Brent Crude")), chg("Brent Crude"), "Per barrel")}
-          {card("WTI Crude", "$" + fmt(val("WTI Crude")), chg("WTI Crude"), "Per barrel")}
+
+              {card(
+                  "Brent Crude",
+                  "$" + fmt(val("Brent Crude")),
+                  chg("Brent Crude"),
+                  "Per barrel"
+              )}
+
+              {card(
+                  "WTI Crude",
+                  "$" + fmt(val("WTI Crude")),
+                  chg("WTI Crude"),
+                  "Per barrel"
+              )}
+
             </div>
+
           </section>
 
           <section class="section">
+
             <div class="section-title">
               <span></span>
               <h2>Gold & Silver</h2>
             </div>
 
             <div class="grid">
-          {card("Spot Gold", "$" + fmt(val("Spot Gold")), chg("Spot Gold"), "Per troy ounce")}
-          {card("Spot Silver", "$" + fmt(val("Spot Silver")), chg("Spot Silver"), "Per troy ounce")}
+
+              {card(
+                  "Gold Futures",
+                  "$" + fmt(val("Gold")),
+                  chg("Gold"),
+                  "COMEX futures • Per troy ounce"
+              )}
+
+              {card(
+                  "Silver Futures",
+                  "$" + fmt(val("Silver")),
+                  chg("Silver"),
+                  "COMEX futures • Per troy ounce"
+              )}
+
             </div>
+
           </section>
 
           <section class="insight">
-            <h2>Market Insight</h2>
+
+            <h2>
+              Market Insight
+            </h2>
+
             <p>
-              Global and Indian markets are being monitored automatically.
-              Equity indices, currency, crude oil, gold and silver prices
-              shown above are refreshed from the latest available market data.
-              Investors should monitor market conditions, global risk,
-              interest-rate expectations and commodity movements.
+              Global and Indian markets are monitored automatically.
+              Equity indices, currency, crude oil, gold and silver
+              prices shown above are refreshed from the latest available
+              market data. Investors should monitor global risk,
+              interest-rate expectations, currency movements and
+              commodity prices.
             </p>
+
           </section>
 
           </main>
 
           <footer class="footer">
-            <div><strong>BIKUSURA GROUP</strong></div>
-            <div>BUILDING WEALTH • CREATING LEGACY</div>
-            <div class="disclaimer">
-              Market data is provided for informational purposes only and may
-              change during market hours. This page is not investment advice.
+
+            <div>
+              <strong>BIKUSURA GROUP</strong>
             </div>
+
+            <div>
+              BUILDING WEALTH • CREATING LEGACY
+            </div>
+
+            <div class="disclaimer">
+
+              Market data is provided for informational purposes only
+              and may change during market hours. This page is not
+              investment advice.
+
+            </div>
+
           </footer>
 
           </body>
           </html>
           """
 
-          with open("Bikusura_Daily_Market_Updates.html", "w", encoding="utf-8") as f:
+          with open(
+              "Bikusura_Daily_Market_Updates.html",
+              "w",
+              encoding="utf-8"
+          ) as f:
               f.write(html)
 
-          print("Market update generated successfully:", date_text)
+          print(
+              "Market update generated successfully:",
+              date_text
+          )
+
           PY
 
       - name: Commit and publish update
         run: |
           git config user.name "Bikusura Market Bot"
           git config user.email "groupbikusura@gmail.com"
+
           git add Bikusura_Daily_Market_Updates.html
-          git diff --cached --quiet || git commit -m "Automatic daily market update"
-          git push
+
+          if git diff --cached --quiet; then
+            echo "No changes to commit."
+          else
+            git commit -m "Automatic daily market update"
+            git push
+          fi
