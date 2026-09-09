@@ -18,21 +18,6 @@ jobs:
       - name: Checkout website
         uses: actions/checkout@v4
 
-      - name: Apply official Bikusura Group logo
-        run: |
-          python - <<'PY'
-          import re
-          from pathlib import Path
-          path = Path("index.html")
-          text = path.read_text(encoding="utf-8")
-          replacement = '<img class="brand-logo" src="assets/bikusura-group-logo.svg" alt="Bikusura Group logo">'
-          updated, count = re.subn(r'<svg class="brand-logo"[\s\S]*?</svg>', replacement, text, count=1)
-          if count != 1:
-              raise SystemExit("Could not find the old Bikusura Group inline logo in index.html")
-          path.write_text(updated, encoding="utf-8")
-          print("Official Bikusura Group logo applied to index.html")
-          PY
-
       - name: Setup Python
         uses: actions/setup-python@v5
         with:
@@ -44,10 +29,9 @@ jobs:
       - name: Generate Daily Market Update
         run: |
           python <<'PY'
-          import html
-          import sys
-          import time
+          import html, sys, time
           from datetime import datetime, timezone, timedelta
+          from pathlib import Path
           import yfinance as yf
 
           IST = timezone(timedelta(hours=5, minutes=30))
@@ -66,48 +50,52 @@ jobs:
           def get_data(symbol):
               for attempt in range(3):
                   try:
-                      data = yf.Ticker(symbol).history(period="5d", interval="1d", auto_adjust=False)
-                      data = data.dropna(subset=["Close"])
-                      if len(data) == 0:
-                          raise ValueError("No market data returned")
-                      close = float(data["Close"].iloc[-1])
-                      previous = float(data["Close"].iloc[-2]) if len(data) > 1 else close
-                      change = ((close - previous) / previous) * 100 if previous else 0
-                      return close, change
+                      d = yf.Ticker(symbol).history(period="5d", interval="1d", auto_adjust=False).dropna(subset=["Close"])
+                      if len(d) == 0: raise ValueError("No data")
+                      close = float(d["Close"].iloc[-1])
+                      prev = float(d["Close"].iloc[-2]) if len(d) > 1 else close
+                      return close, ((close-prev)/prev*100 if prev else 0)
                   except Exception as e:
-                      print(f"{symbol}: attempt {attempt + 1} failed: {e}")
-                      time.sleep(3)
+                      print(f"{symbol}: attempt {attempt+1} failed: {e}")
+                      time.sleep(2)
+              return None, None
+
+          def get_crypto_spot(symbol):
+              for attempt in range(3):
+                  try:
+                      t = yf.Ticker(symbol)
+                      spot = float(t.fast_info["last_price"])
+                      d = t.history(period="3d", interval="1d", auto_adjust=False).dropna(subset=["Close"])
+                      prev = float(d["Close"].iloc[-2]) if len(d) > 1 else spot
+                      return spot, ((spot-prev)/prev*100 if prev else 0)
+                  except Exception as e:
+                      print(f"{symbol}: attempt {attempt+1} failed: {e}")
+                      time.sleep(2)
               return None, None
 
           data = {name: get_data(symbol) for name, symbol in tickers.items()}
+          crypto = {"Bitcoin": get_crypto_spot("BTC-USD"), "Ethereum": get_crypto_spot("ETH-USD")}
           critical = ["Sensex", "Nifty 50", "Nifty Bank", "USD/INR", "Gold", "Silver"]
           missing = [name for name in critical if data[name][0] is None]
-          if missing:
-              print("ERROR: Missing critical market data:", missing)
-              sys.exit(1)
+          if missing: sys.exit(f"Missing critical market data: {missing}")
 
-          def fmt(value, decimals=2):
-              return "N/A" if value is None else f"{value:,.{decimals}f}"
-
+          def fmt(v, decimals=2): return "N/A" if v is None else f"{v:,.{decimals}f}"
           usd_inr = data["USD/INR"][0]
           ounce_grams = 31.1034768
-          # COMEX futures are USD per troy ounce. Convert to INR using USD/INR.
-          gold_10g_inr = data["Gold"][0] * usd_inr * 10 / ounce_grams
-          silver_kg_inr = data["Silver"][0] * usd_inr * 1000 / ounce_grams
+          gold_10g = data["Gold"][0] * usd_inr * 10 / ounce_grams
+          silver_kg = data["Silver"][0] * usd_inr * 1000 / ounce_grams
+          btc_inr = crypto["Bitcoin"][0] * usd_inr if crypto["Bitcoin"][0] is not None else None
+          eth_inr = crypto["Ethereum"][0] * usd_inr if crypto["Ethereum"][0] is not None else None
 
           def card(name, value, change, note):
-              if change is None:
-                  cls, change_text = "neutral", "Latest available"
-              elif change > 0:
-                  cls, change_text = "up", f"▲ {change:.2f}%"
-              elif change < 0:
-                  cls, change_text = "down", f"▼ {abs(change):.2f}%"
-              else:
-                  cls, change_text = "neutral", "0.00%"
-              return f'''<div class="card"><div class="name">{html.escape(name)}</div><div class="value">{value}</div><div class="change {cls}">{change_text}</div><div class="note">{html.escape(note)}</div></div>'''
+              if change is None: cls, ch = "neutral", "Latest available"
+              elif change > 0: cls, ch = "up", f"▲ {change:.2f}%"
+              elif change < 0: cls, ch = "down", f"▼ {abs(change):.2f}%"
+              else: cls, ch = "neutral", "0.00%"
+              return f'<div class="card"><div class="name">{html.escape(name)}</div><div class="value">{value}</div><div class="change {cls}">{ch}</div><div class="note">{html.escape(note)}</div></div>'
 
           def section(title, cards):
-              return f'''<section class="section"><div class="section-title"><span></span><h2>{title}</h2></div><div class="grid">{cards}</div></section>'''
+              return f'<section class="section"><div class="section-title"><span></span><h2>{title}</h2></div><div class="grid">{cards}</div></section>'
 
           global_cards = "".join([
               card("Nikkei 225 • Japan", fmt(data["Nikkei 225"][0]), data["Nikkei 225"][1], "Latest available"),
@@ -116,33 +104,40 @@ jobs:
               card("Hang Seng • Hong Kong", fmt(data["Hang Seng"][0]), data["Hang Seng"][1], "Latest available"),
               card("Dow Jones • USA", fmt(data["Dow Jones"][0]), data["Dow Jones"][1], "Latest U.S. close"),
               card("S&P 500 • USA", fmt(data["S&P 500"][0]), data["S&P 500"][1], "Latest U.S. close"),
-              card("NASDAQ • USA", fmt(data["NASDAQ"][0]), data["NASDAQ"][1], "Latest U.S. close")
-          ])
-
+              card("NASDAQ • USA", fmt(data["NASDAQ"][0]), data["NASDAQ"][1], "Latest U.S. close")])
           india_cards = "".join([
               card("Sensex", fmt(data["Sensex"][0]), data["Sensex"][1], "Latest available"),
               card("Nifty 50", fmt(data["Nifty 50"][0]), data["Nifty 50"][1], "Latest available"),
-              card("Nifty Bank", fmt(data["Nifty Bank"][0]), data["Nifty Bank"][1], "Latest available")
-          ])
-
+              card("Nifty Bank", fmt(data["Nifty Bank"][0]), data["Nifty Bank"][1], "Latest available")])
           commodity_cards = "".join([
-              card("Gold", "₹" + fmt(gold_10g_inr, 0), data["Gold"][1], "Indicative INR value • Per 10 gm"),
-              card("Silver", "₹" + fmt(silver_kg_inr, 0), data["Silver"][1], "Indicative INR value • Per kg")
-          ])
+              card("Gold", "₹" + fmt(gold_10g, 0), data["Gold"][1], "Indicative INR value • Per 10 gm"),
+              card("Silver", "₹" + fmt(silver_kg, 0), data["Silver"][1], "Indicative INR value • Per kg")])
+          crypto_cards = "".join([
+              card("Bitcoin (BTC)", "₹" + fmt(btc_inr, 0), crypto["Bitcoin"][1], "Live crypto spot • INR"),
+              card("Ethereum (ETH)", "₹" + fmt(eth_inr, 0), crypto["Ethereum"][1], "Live crypto spot • INR")])
 
-          html_doc = f'''<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>Bikusura Group | Daily Market Updates - {date_text.title()}</title><style>
-          :root{{--navy:#071a33;--gold:#d4af37;--gold2:#f1d77a;--white:#fff;--muted:#aebbd0;--green:#28c76f;--red:#ff5c5c;--card:rgba(255,255,255,.055);--border:rgba(212,175,55,.28)}}*{{margin:0;padding:0;box-sizing:border-box}}body{{font-family:Arial,Helvetica,sans-serif;background:linear-gradient(135deg,var(--navy),#020b17);color:var(--white);min-height:100vh}}header{{padding:42px 20px 30px;text-align:center;border-bottom:1px solid var(--border);background:linear-gradient(180deg,#0c2749,#071a33)}}.logo{{font-size:28px;font-weight:800;letter-spacing:2px;color:var(--gold2)}}.tagline{{margin-top:7px;font-size:12px;letter-spacing:3px;color:var(--muted)}}.date{{margin-top:22px;display:inline-block;padding:9px 18px;border:1px solid var(--border);border-radius:30px;color:var(--gold2);font-size:13px;font-weight:700}}.container{{width:min(1100px,92%);margin:30px auto 60px}}.intro{{text-align:center;margin-bottom:28px}}.intro h1{{font-size:30px;margin-bottom:8px}}.intro p{{color:var(--muted);font-size:14px}}.snapshot{{background:rgba(212,175,55,.08);border:1px solid var(--border);border-radius:15px;padding:15px 18px;margin-bottom:25px;text-align:center;color:#dce5f3;font-size:13px}}.section{{margin-top:28px}}.section-title{{display:flex;align-items:center;gap:10px;margin-bottom:14px}}.section-title span{{width:4px;height:25px;background:var(--gold);border-radius:5px}}.section-title h2{{font-size:20px;letter-spacing:.5px}}.grid{{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:15px}}.card{{background:var(--card);border:1px solid rgba(255,255,255,.09);border-radius:15px;padding:19px;transition:.25s}}.card:hover{{transform:translateY(-3px);border-color:var(--border)}}.name{{color:var(--muted);font-size:12px;text-transform:uppercase;letter-spacing:1px;margin-bottom:9px}}.value{{font-size:23px;font-weight:800;color:var(--white)}}.change{{margin-top:7px;font-size:13px;font-weight:700}}.up{{color:var(--green)}}.down{{color:var(--red)}}.neutral{{color:var(--gold2)}}.note{{margin-top:8px;font-size:10px;color:#8393aa}}.insight{{margin-top:28px;padding:24px;border-radius:18px;background:linear-gradient(145deg,rgba(212,175,55,.12),rgba(255,255,255,.035));border:1px solid var(--border)}}.insight h2{{color:var(--gold2);margin-bottom:12px}}.insight p{{color:#d6dfec;line-height:1.7;font-size:14px}}.footer{{text-align:center;padding:30px 20px;border-top:1px solid var(--border);color:var(--muted);font-size:12px}}.footer strong{{color:var(--gold2)}}.disclaimer{{margin-top:10px;font-size:10px;color:#718097;line-height:1.5}}@media(max-width:600px){{.intro h1{{font-size:24px}}.logo{{font-size:24px}}.value{{font-size:21px}}}}
-          </style></head><body><header><div class="logo">BIKUSURA GROUP</div><div class="tagline">BUILDING WEALTH • CREATING LEGACY</div><div class="date">{date_text}</div></header><main class="container"><div class="intro"><h1>Daily Market Updates</h1><p>Global &amp; Indian Market Snapshot</p></div><div class="snapshot">Automatically updated market data • Last update: {updated_text}</div>
-          {section("Global Indices", global_cards)}
-          {section("Indian Market", india_cards)}
-          {section("INR / Dollar", card("USD / INR", "₹" + fmt(usd_inr), data["USD/INR"][1], "1 USD in INR"))}
-          {section("Crude Oil", card("Brent Crude", "$" + fmt(data["Brent Crude"][0]), data["Brent Crude"][1], "Per barrel") + card("WTI Crude", "$" + fmt(data["WTI Crude"][0]), data["WTI Crude"][1], "Per barrel"))}
-          {section("Gold & Silver", commodity_cards)}
-          <section class="insight"><h2>Market Insight</h2><p>Global and Indian markets are monitored automatically. Gold and silver are converted from international futures prices into indicative INR values using the latest USD/INR rate. Gold is shown per 10 gm and silver per kg. Prices may differ from local bullion/jewellery market rates.</p></section></main><footer class="footer"><strong>BIKUSURA GROUP</strong><div class="disclaimer">Market data is for information only and is not investment advice. Data availability depends on the market-data provider.</div></footer></body></html>'''
+          css = '''
+          :root{--navy:#071a33;--gold:#d4af37;--gold2:#f1d77a;--white:#fff;--muted:#aebbd0;--green:#28c76f;--red:#ff5c5c;--card:rgba(255,255,255,.055);--border:rgba(212,175,55,.28)}*{margin:0;padding:0;box-sizing:border-box}body{font-family:Arial,Helvetica,sans-serif;background:linear-gradient(135deg,var(--navy),#020b17);color:var(--white);min-height:100vh}header{padding:42px 20px 30px;text-align:center;border-bottom:1px solid var(--border);background:linear-gradient(180deg,#0c2749,#071a33)}.logo{font-size:28px;font-weight:800;letter-spacing:2px;color:var(--gold2)}.tagline{margin-top:7px;font-size:12px;letter-spacing:3px;color:var(--muted)}.date{margin-top:22px;display:inline-block;padding:9px 18px;border:1px solid var(--border);border-radius:30px;color:var(--gold2);font-size:13px;font-weight:700}.container{width:min(1100px,92%);margin:30px auto 60px}.intro{text-align:center;margin-bottom:28px}.intro h1{font-size:30px;margin-bottom:8px}.intro p{color:var(--muted);font-size:14px}.snapshot{background:rgba(212,175,55,.08);border:1px solid var(--border);border-radius:15px;padding:15px 18px;margin-bottom:25px;text-align:center;color:#dce5f3;font-size:13px}.section{margin-top:28px}.section-title{display:flex;align-items:center;gap:10px;margin-bottom:14px}.section-title span{width:4px;height:25px;background:var(--gold);border-radius:5px}.section-title h2{font-size:20px;letter-spacing:.5px}.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:15px}.card{background:var(--card);border:1px solid rgba(255,255,255,.09);border-radius:15px;padding:19px;transition:.25s}.card:hover{transform:translateY(-3px);border-color:var(--border)}.name{color:var(--muted);font-size:12px;text-transform:uppercase;letter-spacing:1px;margin-bottom:9px}.value{font-size:23px;font-weight:800;color:var(--white)}.change{margin-top:7px;font-size:13px;font-weight:700}.up{color:var(--green)}.down{color:var(--red)}.neutral{color:var(--gold2)}.note{margin-top:8px;font-size:10px;color:#8393aa}.insight{margin-top:28px;padding:24px;border-radius:18px;background:linear-gradient(145deg,rgba(212,175,55,.12),rgba(255,255,255,.035));border:1px solid var(--border)}.insight h2{color:var(--gold2);margin-bottom:12px}.insight p{color:#d6dfec;line-height:1.7;font-size:14px}.footer{text-align:center;padding:30px 20px;border-top:1px solid var(--border);color:var(--muted);font-size:12px}.footer strong{color:var(--gold2)}.disclaimer{margin-top:10px;font-size:10px;color:#718097;line-height:1.5}@media(max-width:600px){.intro h1{font-size:24px}.logo{font-size:24px}.value{font-size:21px}}'''
 
-          with open("Bikusura_Daily_Market_Updates.html", "w", encoding="utf-8") as f:
-              f.write(html_doc)
-          print("Daily Market Update generated successfully:", updated_text)
+          html_doc = f'''<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0"><title>Bikusura Group | Daily Market Updates - {date_text.title()}</title><style>{css}</style></head><body><header><div class="logo">BIKUSURA GROUP</div><div class="tagline">BUILDING WEALTH • CREATING LEGACY</div><div class="date">{date_text}</div></header><main class="container"><div class="intro"><h1>Daily Market Updates</h1><p>Global, Indian, Commodity &amp; Crypto Market Snapshot</p></div><div class="snapshot">Automatically updated market data • Last update: {updated_text}</div>{section("Global Indices",global_cards)}{section("Indian Market",india_cards)}{section("INR / Dollar",card("USD / INR","₹"+fmt(usd_inr),data["USD/INR"][1],"1 USD in INR"))}{section("Crude Oil",card("Brent Crude","$"+fmt(data["Brent Crude"][0]),data["Brent Crude"][1],"Per barrel")+card("WTI Crude","$"+fmt(data["WTI Crude"][0]),data["WTI Crude"][1],"Per barrel"))}{section("Gold &amp; Silver",commodity_cards)}{section("Crypto • INR Spot",crypto_cards)}<section class="insight"><h2>Market Insight</h2><p>Gold and silver are converted from international futures prices into indicative INR values using the latest USD/INR rate. Gold is shown per 10 gm and silver per kg. Bitcoin and Ethereum use live crypto spot prices converted to INR using USD/INR. Prices may differ from local bullion, exchange or broker rates.</p></section></main><footer class="footer"><strong>BIKUSURA GROUP</strong><div class="disclaimer">Market data is for information only and is not investment advice. Data availability depends on the market-data provider.</div></footer></body></html>'''
+          Path("Bikusura_Daily_Market_Updates.html").write_text(html_doc,encoding="utf-8")
+          print("Daily Market Update generated:",updated_text)
+          PY
+
+      - name: Apply official Bikusura Group logo
+        run: |
+          python - <<'PY'
+          import re
+          from pathlib import Path
+          path = Path("index.html")
+          text = path.read_text(encoding="utf-8")
+          replacement = '<img class="brand-logo" src="assets/bikusura-group-logo.svg" alt="Bikusura Group logo">'
+          updated, count = re.subn(r'<svg class="brand-logo"[\s\S]*?</svg>', replacement, text, count=1)
+          if count == 1:
+              path.write_text(updated, encoding="utf-8")
+              print("Official Bikusura Group logo applied")
+          else:
+              print("Logo already applied or old inline logo not found")
           PY
 
       - name: Commit updated market page and logo
@@ -150,4 +145,4 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add index.html Bikusura_Daily_Market_Updates.html
-          git diff --cached --quiet && echo "No changes to commit" || (git commit -m "Update Bikusura website assets [skip ci]" && git push)
+          git diff --cached --quiet || (git commit -m "Update Bikusura market data [skip ci]" && git push)
