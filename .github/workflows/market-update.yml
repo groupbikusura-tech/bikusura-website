@@ -4,8 +4,8 @@ on:
   push:
     branches: [main]
   schedule:
-    # 4:00 PM IST = 10:30 UTC, Monday-Friday
-    - cron: "30 10 * * 1-5"
+    # 4:00 PM IST = 10:30 UTC, every day
+    - cron: "30 10 * * *"
   workflow_dispatch:
 
 permissions:
@@ -26,7 +26,7 @@ jobs:
           path = Path("index.html")
           text = path.read_text(encoding="utf-8")
           replacement = '<img class="brand-logo" src="assets/bikusura-group-logo.svg" alt="Bikusura Group logo">'
-          updated, count = re.subn(r'<svg class="brand-logo"[\\s\\S]*?</svg>', replacement, text, count=1)
+          updated, count = re.subn(r'<svg class="brand-logo"[\s\S]*?</svg>', replacement, text, count=1)
           if count != 1:
               raise SystemExit("Could not find the old Bikusura Group inline logo in index.html")
           path.write_text(updated, encoding="utf-8")
