@@ -1,0 +1,1 @@
+Trigger market workflow after fixing official Bikusura Group logo replacement.
