@@ -35,7 +35,7 @@ jobs:
           from urllib.parse import quote
           IST=timezone(timedelta(hours=5,minutes=30)); now=datetime.now(IST)
           date_text=now.strftime('%d %B %Y').upper(); updated_text=now.strftime('%d %b %Y, %I:%M %p IST')
-          tickers={'Nikkei 225':'^N225','KOSPI':'^KS11','Shanghai Composite':'^SSEC','Hang Seng':'^HSI','Dow Jones':'^DJI','S&P 500':'^GSPC','NASDAQ':'^IXIC','Sensex':'^BSESN','Nifty 50':'^NSEI','Nifty Bank':'^NSEBANK','USD/INR':'INR=X','Brent Crude':'BZ=F','WTI Crude':'CL=F','Gold':'GC=F','Silver':'SI=F','Bitcoin':'BTC-USD','Ethereum':'ETH-USD'}
+          tickers={'Nikkei 225':'^N225','KOSPI':'^KS11','Hang Seng':'^HSI','Dow Jones':'^DJI','S&P 500':'^GSPC','NASDAQ':'^IXIC','Sensex':'^BSESN','Nifty 50':'^NSEI','Nifty Bank':'^NSEBANK','USD/INR':'INR=X','Brent Crude':'BZ=F','WTI Crude':'CL=F','Gold':'GC=F','Silver':'SI=F','Bitcoin':'BTC-USD','Ethereum':'ETH-USD'}
           def getj(u):
             p=subprocess.run(['curl','-L','--fail','--silent','--show-error','--max-time','30','--retry','4','--retry-delay','2','-A','Mozilla/5.0',u],capture_output=True,text=True)
             if p.returncode: raise RuntimeError(p.stderr.strip() or str(p.returncode))
@@ -63,7 +63,7 @@ jobs:
             return f'<div class="card"><div class="name">{html.escape(n)}</div><div class="value">{v}</div><div class="change {cl}">{ch}</div><div class="note">{html.escape(str(note))}</div></div>'
           def sec(t,c): return f'<section><h2>{t}</h2><div class="grid">{c}</div></section>'
           def q(n): return data[n]
-          glob=''.join(card(n,fmt(q(n)[0]),q(n)[1],q(n)[2]) for n in ['Nikkei 225','KOSPI','Shanghai Composite','Hang Seng','Dow Jones','S&P 500','NASDAQ'])
+          glob=''.join(card(n,fmt(q(n)[0]),q(n)[1],q(n)[2]) for n in ['Nikkei 225','KOSPI','Hang Seng','Dow Jones','S&P 500','NASDAQ'])
           india=card('GIFT Nifty',fmt(gift[0]),gift[1],gift[2])+''.join(card(n,fmt(q(n)[0]),q(n)[1],q(n)[2]) for n in ['Sensex','Nifty 50','Nifty Bank'])
           usd=q('USD/INR')[0]; gold=q('Gold')[0]; silver=q('Silver')[0]; btc=q('Bitcoin')[0]; eth=q('Ethereum')[0]
           gold10=gold*usd*10/31.1034768 if gold and usd else None; silkg=silver*usd*1000/31.1034768 if silver and usd else None; btci=btc*usd if btc and usd else None; ethi=eth*usd if eth and usd else None
