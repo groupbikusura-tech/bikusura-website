@@ -1,6 +1,9 @@
 name: Bikusura Daily Market Update
 
 on:
+  push:
+    paths:
+      - '.github/workflows/market-update.yml'
   schedule:
     # 06:45 AM IST = 01:15 UTC
     - cron: "15 1 * * *"
@@ -83,7 +86,6 @@ jobs:
               raise RuntimeError(f"{symbol}: failed after {attempts} attempts: {last_error}")
 
           def gift_nifty(attempts=5):
-              # NSE India marketStatus exposes the current GIFT Nifty futures snapshot.
               url = "https://www.nseindia.com/api/marketStatus"
               headers = {
                   "User-Agent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 Chrome/131 Safari/537.36",
@@ -116,11 +118,7 @@ jobs:
               print(f"{name}: {data[name]}")
 
           gift = gift_nifty()
-
-          crypto = {
-              "Bitcoin": yahoo_history("BTC-USD"),
-              "Ethereum": yahoo_history("ETH-USD")
-          }
+          crypto = {"Bitcoin": yahoo_history("BTC-USD"), "Ethereum": yahoo_history("ETH-USD")}
 
           def fmt(v, decimals=2):
               return "N/A" if v is None else f"{v:,.{decimals}f}"
@@ -184,21 +182,19 @@ jobs:
           from pathlib import Path
           path = Path("index.html")
           text = path.read_text(encoding="utf-8")
-          replacement = '<img class="brand-logo" src="assets/bikusura-group-logo.svg" alt="Bikusura Group logo" width="48" height="48">'
-          patterns = [r'<svg\b[^>]*class=["\'][^"\']*\bbrand-logo\b[^"\']*["\'][^>]*>[\s\S]*?</svg>', r'<svg\b[^>]*class=["\']brand-logo["\'][^>]*>[\s\S]*?</svg>']
-          for pattern in patterns:
-              text, count = re.subn(pattern, replacement, text, count=1, flags=re.I)
-              if count:
-                  path.write_text(text, encoding="utf-8")
-                  print("Official Bikusura Group logo applied")
-                  break
-          else:
-              raise SystemExit("Could not find the existing brand logo SVG in index.html")
+          replacement = '<img src="https://raw.githubusercontent.com/groupbikusura-tech/bikusura-website/main/assets/bikusura-logo.png" alt="Bikusura Group" style="height:44px;width:auto;display:block;object-fit:contain;">'
+          text = re.sub(r'<img[^>]+alt=["\']Bikusura Group["\'][^>]*>', replacement, text, count=1, flags=re.I)
+          path.write_text(text, encoding="utf-8")
           PY
 
-      - name: Commit updated market page and logo
+      - name: Commit and push updated pages
         run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git config user.name "bikusura-market-bot"
+          git config user.email "actions@users.noreply.github.com"
           git add index.html Bikusura_Daily_Market_Updates.html
-          git diff --cached --quiet || (git commit -m "Update Bikusura market data [skip ci]" && git push)
+          if git diff --cached --quiet; then
+            echo "No page changes to commit"
+          else
+            git commit -m "chore: update daily market data"
+            git push
+          fi
