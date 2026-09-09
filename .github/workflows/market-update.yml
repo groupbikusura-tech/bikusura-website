@@ -1,6 +1,8 @@
 name: Bikusura Daily Market Update
 
 on:
+  push:
+    branches: [main]
   schedule:
     # 4:00 PM IST = 10:30 UTC, Monday-Friday
     - cron: "30 10 * * 1-5"
@@ -15,6 +17,21 @@ jobs:
     steps:
       - name: Checkout website
         uses: actions/checkout@v4
+
+      - name: Apply official Bikusura Group logo
+        run: |
+          python - <<'PY'
+          import re
+          from pathlib import Path
+          path = Path("index.html")
+          text = path.read_text(encoding="utf-8")
+          replacement = '<img class="brand-logo" src="assets/bikusura-group-logo.svg" alt="Bikusura Group logo">'
+          updated, count = re.subn(r'<svg class="brand-logo"[\\s\\S]*?</svg>', replacement, text, count=1)
+          if count != 1:
+              raise SystemExit("Could not find the old Bikusura Group inline logo in index.html")
+          path.write_text(updated, encoding="utf-8")
+          print("Official Bikusura Group logo applied to index.html")
+          PY
 
       - name: Setup Python
         uses: actions/setup-python@v5
@@ -128,9 +145,9 @@ jobs:
           print("Daily Market Update generated successfully:", updated_text)
           PY
 
-      - name: Commit updated market page
+      - name: Commit updated market page and logo
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add Bikusura_Daily_Market_Updates.html
-          git diff --cached --quiet && echo "No changes to commit" || (git commit -m "Update daily market data" && git push)
+          git add index.html Bikusura_Daily_Market_Updates.html
+          git diff --cached --quiet && echo "No changes to commit" || (git commit -m "Update Bikusura website assets [skip ci]" && git push)
