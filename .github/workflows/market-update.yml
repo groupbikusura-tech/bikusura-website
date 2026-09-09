@@ -5,13 +5,9 @@ on:
     paths:
       - '.github/workflows/market-update.yml'
   schedule:
-    # 06:45 AM IST = 01:15 UTC
     - cron: "15 1 * * *"
-    # 09:15 AM IST = 03:45 UTC
     - cron: "45 3 * * *"
-    # 03:45 PM IST = 10:15 UTC
     - cron: "15 10 * * *"
-    # 10:45 PM IST = 17:15 UTC
     - cron: "15 17 * * *"
   workflow_dispatch:
 
@@ -34,164 +30,136 @@ jobs:
         with:
           python-version: "3.12"
 
-      - name: Generate reliable market snapshot
-        env:
-          PYTHONUNBUFFERED: "1"
+      - name: Generate market snapshot
         run: |
           python <<'PY'
-          import html
-          import json
-          import time
+          import html, json, subprocess, time
           from datetime import datetime, timezone, timedelta
           from pathlib import Path
           from urllib.parse import quote
-          from urllib.request import Request, urlopen
 
           IST = timezone(timedelta(hours=5, minutes=30))
           now = datetime.now(IST)
-          date_text = now.strftime("%d %B %Y").upper()
-          updated_text = now.strftime("%d %b %Y, %I:%M %p IST")
+          date_text = now.strftime('%d %B %Y').upper()
+          updated_text = now.strftime('%d %b %Y, %I:%M %p IST')
 
           tickers = {
-              "Nikkei 225": "^N225", "KOSPI": "^KS11", "Shanghai Composite": "^SSEC",
-              "Hang Seng": "^HSI", "Dow Jones": "^DJI", "S&P 500": "^GSPC",
-              "NASDAQ": "^IXIC", "Sensex": "^BSESN", "Nifty 50": "^NSEI",
-              "Nifty Bank": "^NSEBANK", "USD/INR": "INR=X", "Brent Crude": "BZ=F",
-              "WTI Crude": "CL=F", "Gold": "GC=F", "Silver": "SI=F"
+              'Nikkei 225':'^N225','KOSPI':'^KS11','Shanghai Composite':'^SSEC',
+              'Hang Seng':'^HSI','Dow Jones':'^DJI','S&P 500':'^GSPC','NASDAQ':'^IXIC',
+              'Sensex':'^BSESN','Nifty 50':'^NSEI','Nifty Bank':'^NSEBANK',
+              'USD/INR':'INR=X','Brent Crude':'BZ=F','WTI Crude':'CL=F',
+              'Gold':'GC=F','Silver':'SI=F','Bitcoin':'BTC-USD','Ethereum':'ETH-USD'
           }
 
-          def yahoo_history(symbol, attempts=5):
-              url = "https://query1.finance.yahoo.com/v8/finance/chart/" + quote(symbol, safe="") + "?range=10d&interval=1d&events=history"
-              last_error = None
-              for attempt in range(1, attempts + 1):
+          def get_json(url):
+              cmd=['curl','-L','--fail','--silent','--show-error','--max-time','25','--retry','4','--retry-delay','2',
+                   '-A','Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 Chrome/131 Safari/537.36',url]
+              p=subprocess.run(cmd,capture_output=True,text=True)
+              if p.returncode != 0:
+                  raise RuntimeError(p.stderr.strip() or f'curl exit {p.returncode}')
+              return json.loads(p.stdout)
+
+          def yahoo(symbol):
+              encoded=quote(symbol,safe='')
+              urls=[
+                  f'https://query1.finance.yahoo.com/v8/finance/chart/{encoded}?range=10d&interval=1d&events=history',
+                  f'https://query2.finance.yahoo.com/v8/finance/chart/{encoded}?range=10d&interval=1d&events=history'
+              ]
+              last=None
+              for url in urls:
                   try:
-                      req = Request(url, headers={"User-Agent": "Mozilla/5.0"})
-                      with urlopen(req, timeout=20) as r:
-                          payload = json.loads(r.read().decode("utf-8"))
-                      result = payload["chart"]["result"][0]
-                      timestamps = result.get("timestamp") or []
-                      closes = (result.get("indicators", {}).get("quote", [{}])[0].get("close") or [])
-                      rows = [(datetime.fromtimestamp(ts, timezone.utc).date(), float(close)) for ts, close in zip(timestamps, closes) if close is not None]
-                      if not rows:
-                          raise ValueError("No usable close values")
-                      rows.sort(key=lambda x: x[0])
-                      close_date, close = rows[-1]
-                      prev = rows[-2][1] if len(rows) > 1 else close
-                      change = ((close - prev) / prev * 100) if prev else 0.0
-                      return close, change, close_date
+                      payload=get_json(url)
+                      result=(payload.get('chart') or {}).get('result') or []
+                      if not result: raise ValueError('Yahoo returned no result')
+                      result=result[0]
+                      ts=result.get('timestamp') or []
+                      closes=((result.get('indicators') or {}).get('quote') or [{}])[0].get('close') or []
+                      rows=[]
+                      for t,c in zip(ts,closes):
+                          if c is not None:
+                              rows.append((datetime.fromtimestamp(t,timezone.utc).date(),float(c)))
+                      if not rows: raise ValueError('No usable close values')
+                      rows.sort()
+                      d,v=rows[-1]
+                      prev=rows[-2][1] if len(rows)>1 else v
+                      pct=((v-prev)/prev*100) if prev else 0.0
+                      return v,pct,str(d)
                   except Exception as e:
-                      last_error = e
-                      print(f"{symbol}: attempt {attempt}/{attempts} failed: {e}")
-                      time.sleep(2 * attempt)
-              raise RuntimeError(f"{symbol}: failed after {attempts} attempts: {last_error}")
+                      last=e
+                      time.sleep(1)
+              print(f'WARN {symbol}: {last}')
+              return None,None,'Latest available'
 
-          def gift_nifty(attempts=5):
-              url = "https://www.nseindia.com/api/marketStatus"
-              headers = {
-                  "User-Agent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 Chrome/131 Safari/537.36",
-                  "Accept": "application/json,text/plain,*/*",
-                  "Referer": "https://www.nseindia.com/"
-              }
-              last_error = None
-              for attempt in range(1, attempts + 1):
-                  try:
-                      req = Request(url, headers=headers)
-                      with urlopen(req, timeout=20) as r:
-                          payload = json.loads(r.read().decode("utf-8"))
-                      gift = payload.get("giftnifty") or {}
-                      last = gift.get("LASTPRICE")
-                      pct = gift.get("PERCHANGE")
-                      if last is None or pct is None:
-                          raise ValueError("GIFT Nifty data unavailable")
-                      stamp = gift.get("TIMESTMP") or "NSE IX"
-                      return float(last), float(pct), stamp
-                  except Exception as e:
-                      last_error = e
-                      print(f"GIFT Nifty: attempt {attempt}/{attempts} failed: {e}")
-                      time.sleep(2 * attempt)
-              print(f"GIFT Nifty unavailable: {last_error}")
-              return None, None, "NSE IX / latest available"
+          data={}
+          for name,symbol in tickers.items():
+              data[name]=yahoo(symbol)
+              print(name,data[name])
 
-          data = {}
-          for name, symbol in tickers.items():
-              data[name] = yahoo_history(symbol)
-              print(f"{name}: {data[name]}")
+          def gift_nifty():
+              url='https://www.nseindia.com/api/marketStatus'
+              try:
+                  payload=get_json(url)
+                  gift=payload.get('giftnifty') or {}
+                  last,pct=gift.get('LASTPRICE'),gift.get('PERCHANGE')
+                  if last is None or pct is None: raise ValueError('GIFT Nifty fields missing')
+                  return float(last),float(pct),str(gift.get('TIMESTMP') or 'NSE IX')
+              except Exception as e:
+                  print('WARN GIFT Nifty:',e)
+                  return None,None,'NSE IX / latest available'
 
-          gift = gift_nifty()
-          crypto = {"Bitcoin": yahoo_history("BTC-USD"), "Ethereum": yahoo_history("ETH-USD")}
+          gift=gift_nifty()
 
-          def fmt(v, decimals=2):
-              return "N/A" if v is None else f"{v:,.{decimals}f}"
+          def fmt(v,dec=2):
+              return 'N/A' if v is None else f'{v:,.{dec}f}'
 
-          usd_inr = data["USD/INR"][0]
-          ounce_grams = 31.1034768
-          gold_10g = data["Gold"][0] * usd_inr * 10 / ounce_grams
-          silver_kg = data["Silver"][0] * usd_inr * 1000 / ounce_grams
-          btc_inr = crypto["Bitcoin"][0] * usd_inr
-          eth_inr = crypto["Ethereum"][0] * usd_inr
-
-          def card(name, value, change, note):
-              if change is None:
-                  cls, ch = "neutral", "N/A"
-              elif change > 0:
-                  cls, ch = "up", f"▲ {change:.2f}%"
-              elif change < 0:
-                  cls, ch = "down", f"▼ {abs(change):.2f}%"
-              else:
-                  cls, ch = "neutral", "0.00%"
+          def card(name,value,change,note):
+              if change is None: cls,ch='neutral','N/A'
+              elif change>0: cls,ch='up',f'▲ {change:.2f}%'
+              elif change<0: cls,ch='down',f'▼ {abs(change):.2f}%'
+              else: cls,ch='neutral','0.00%'
               return f'<div class="card"><div class="name">{html.escape(name)}</div><div class="value">{value}</div><div class="change {cls}">{ch}</div><div class="note">{html.escape(str(note))}</div></div>'
 
-          def section(title, cards):
+          def section(title,cards):
               return f'<section class="section"><div class="section-title"><span></span><h2>{title}</h2></div><div class="grid">{cards}</div></section>'
 
-          global_cards = "".join([
-              card("Nikkei 225 • Japan", fmt(data["Nikkei 225"][0]), data["Nikkei 225"][1], f"Close: {data['Nikkei 225'][2]}"),
-              card("KOSPI • South Korea", fmt(data["KOSPI"][0]), data["KOSPI"][1], f"Close: {data['KOSPI'][2]}"),
-              card("Shanghai Composite • China", fmt(data["Shanghai Composite"][0]), data["Shanghai Composite"][1], f"Close: {data['Shanghai Composite'][2]}"),
-              card("Hang Seng • Hong Kong", fmt(data["Hang Seng"][0]), data["Hang Seng"][1], f"Close: {data['Hang Seng'][2]}"),
-              card("Dow Jones • USA", fmt(data["Dow Jones"][0]), data["Dow Jones"][1], f"Latest U.S. close: {data['Dow Jones'][2]}"),
-              card("S&P 500 • USA", fmt(data["S&P 500"][0]), data["S&P 500"][1], f"Latest U.S. close: {data['S&P 500'][2]}"),
-              card("NASDAQ • USA", fmt(data["NASDAQ"][0]), data["NASDAQ"][1], f"Latest U.S. close: {data['NASDAQ'][2]}")])
+          def q(name): return data[name]
+          global_cards=''.join([
+              card('Nikkei 225 • Japan',fmt(q('Nikkei 225')[0]),q('Nikkei 225')[1],f'Close: {q("Nikkei 225")[2]}'),
+              card('KOSPI • South Korea',fmt(q('KOSPI')[0]),q('KOSPI')[1],f'Close: {q("KOSPI")[2]}'),
+              card('Shanghai Composite • China',fmt(q('Shanghai Composite')[0]),q('Shanghai Composite')[1],f'Close: {q("Shanghai Composite")[2]}'),
+              card('Hang Seng • Hong Kong',fmt(q('Hang Seng')[0]),q('Hang Seng')[1],f'Close: {q("Hang Seng")[2]}'),
+              card('Dow Jones • USA',fmt(q('Dow Jones')[0]),q('Dow Jones')[1],f'Latest U.S. close: {q("Dow Jones")[2]}'),
+              card('S&P 500 • USA',fmt(q('S&P 500')[0]),q('S&P 500')[1],f'Latest U.S. close: {q("S&P 500")[2]}'),
+              card('NASDAQ • USA',fmt(q('NASDAQ')[0]),q('NASDAQ')[1],f'Latest U.S. close: {q("NASDAQ")[2]}')])
 
-          gift_value = "N/A" if gift[0] is None else fmt(gift[0])
-          india_cards = "".join([
-              card("GIFT Nifty", gift_value, gift[1], gift[2]),
-              card("Sensex", fmt(data["Sensex"][0]), data["Sensex"][1], f"Close: {data['Sensex'][2]}"),
-              card("Nifty 50", fmt(data["Nifty 50"][0]), data["Nifty 50"][1], f"Close: {data['Nifty 50'][2]}"),
-              card("Nifty Bank", fmt(data["Nifty Bank"][0]), data["Nifty Bank"][1], f"Close: {data['Nifty Bank'][2]}")])
+          india_cards=''.join([
+              card('GIFT Nifty',fmt(gift[0]),gift[1],gift[2]),
+              card('Sensex',fmt(q('Sensex')[0]),q('Sensex')[1],f'Close: {q("Sensex")[2]}'),
+              card('Nifty 50',fmt(q('Nifty 50')[0]),q('Nifty 50')[1],f'Close: {q("Nifty 50")[2]}'),
+              card('Nifty Bank',fmt(q('Nifty Bank')[0]),q('Nifty Bank')[1],f'Close: {q("Nifty Bank")[2]}')])
 
-          commodity_cards = "".join([
-              card("Gold", "₹" + fmt(gold_10g, 0), data["Gold"][1], "Indicative INR value • Per 10 gm"),
-              card("Silver", "₹" + fmt(silver_kg, 0), data["Silver"][1], "Indicative INR value • Per kg")])
+          usd=q('USD/INR')[0]
+          gold=q('Gold')[0]
+          silver=q('Silver')[0]
+          btc=q('Bitcoin')[0]
+          eth=q('Ethereum')[0]
+          gold_10g=gold*usd*10/31.1034768 if gold is not None and usd is not None else None
+          silver_kg=silver*usd*1000/31.1034768 if silver is not None and usd is not None else None
+          btc_inr=btc*usd if btc is not None and usd is not None else None
+          eth_inr=eth*usd if eth is not None and usd is not None else None
 
-          crypto_cards = "".join([
-              card("Bitcoin (BTC)", "₹" + fmt(btc_inr, 0), crypto["Bitcoin"][1], "Daily spot • INR"),
-              card("Ethereum (ETH)", "₹" + fmt(eth_inr, 0), crypto["Ethereum"][1], "Daily spot • INR")])
+          css='''body{font-family:Arial,Helvetica,sans-serif;background:linear-gradient(135deg,#071a33,#020b17);color:#fff;min-height:100vh;margin:0}.container{width:min(1100px,92%);margin:30px auto 60px}header{padding:42px 20px 30px;text-align:center;border-bottom:1px solid rgba(212,175,55,.28);background:#071a33}.logo{font-size:28px;font-weight:800;letter-spacing:2px;color:#f1d77a}.tagline{margin-top:7px;font-size:12px;letter-spacing:3px;color:#aebbd0}.date{margin-top:22px;display:inline-block;padding:9px 18px;border:1px solid rgba(212,175,55,.28);border-radius:30px;color:#f1d77a;font-size:13px;font-weight:700}.intro{text-align:center;margin-bottom:28px}.intro h1{font-size:30px;margin-bottom:8px}.intro p{color:#aebbd0;font-size:14px}.snapshot{background:rgba(212,175,55,.08);border:1px solid rgba(212,175,55,.28);border-radius:15px;padding:15px 18px;margin-bottom:25px;text-align:center;color:#dce5f3;font-size:13px}.section{margin-top:28px}.section-title{display:flex;align-items:center;gap:10px;margin-bottom:14px}.section-title span{width:4px;height:25px;background:#d4af37;border-radius:5px}.section-title h2{font-size:20px}.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:15px}.card{background:rgba(255,255,255,.055);border:1px solid rgba(255,255,255,.09);border-radius:15px;padding:19px}.name{color:#aebbd0;font-size:12px;text-transform:uppercase;letter-spacing:1px;margin-bottom:9px}.value{font-size:23px;font-weight:800}.change{margin-top:7px;font-size:13px;font-weight:700}.up{color:#28c76f}.down{color:#ff5c5c}.neutral{color:#f1d77a}.note{margin-top:8px;font-size:10px;color:#8393aa}.insight{margin-top:28px;padding:24px;border-radius:18px;background:rgba(212,175,55,.08);border:1px solid rgba(212,175,55,.28);color:#d6dfec;line-height:1.7;font-size:14px}.insight h2{color:#f1d77a}.footer{text-align:center;padding:30px 20px;border-top:1px solid rgba(212,175,55,.28);color:#aebbd0;font-size:12px}.footer strong{color:#f1d77a}'''
 
-          css = ''':root{--navy:#071a33;--gold:#d4af37;--gold2:#f1d77a;--white:#fff;--muted:#aebbd0;--green:#28c76f;--red:#ff5c5c;--card:rgba(255,255,255,.055);--border:rgba(212,175,55,.28)}*{margin:0;padding:0;box-sizing:border-box}body{font-family:Arial,Helvetica,sans-serif;background:linear-gradient(135deg,var(--navy),#020b17);color:var(--white);min-height:100vh}header{padding:42px 20px 30px;text-align:center;border-bottom:1px solid var(--border);background:linear-gradient(180deg,#0c2749,#071a33)}.logo{font-size:28px;font-weight:800;letter-spacing:2px;color:var(--gold2)}.tagline{margin-top:7px;font-size:12px;letter-spacing:3px;color:var(--muted)}.date{margin-top:22px;display:inline-block;padding:9px 18px;border:1px solid var(--border);border-radius:30px;color:var(--gold2);font-size:13px;font-weight:700}.container{width:min(1100px,92%);margin:30px auto 60px}.intro{text-align:center;margin-bottom:28px}.intro h1{font-size:30px;margin-bottom:8px}.intro p{color:var(--muted);font-size:14px}.snapshot{background:rgba(212,175,55,.08);border:1px solid var(--border);border-radius:15px;padding:15px 18px;margin-bottom:25px;text-align:center;color:#dce5f3;font-size:13px}.section{margin-top:28px}.section-title{display:flex;align-items:center;gap:10px;margin-bottom:14px}.section-title span{width:4px;height:25px;background:var(--gold);border-radius:5px}.section-title h2{font-size:20px;letter-spacing:.5px}.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:15px}.card{background:var(--card);border:1px solid rgba(255,255,255,.09);border-radius:15px;padding:19px;transition:.25s}.card:hover{transform:translateY(-3px);border-color:var(--border)}.name{color:var(--muted);font-size:12px;text-transform:uppercase;letter-spacing:1px;margin-bottom:9px}.value{font-size:23px;font-weight:800;color:var(--white)}.change{margin-top:7px;font-size:13px;font-weight:700}.up{color:var(--green)}.down{color:var(--red)}.neutral{color:var(--gold2)}.note{margin-top:8px;font-size:10px;color:#8393aa}.insight{margin-top:28px;padding:24px;border-radius:18px;background:linear-gradient(145deg,rgba(212,175,55,.12),rgba(255,255,255,.035));border:1px solid var(--border)}.insight h2{color:var(--gold2);margin-bottom:12px}.insight p{color:#d6dfec;line-height:1.7;font-size:14px}.footer{text-align:center;padding:30px 20px;border-top:1px solid var(--border);color:var(--muted);font-size:12px}.footer strong{color:var(--gold2)}.disclaimer{margin-top:10px;font-size:10px;color:#718097;line-height:1.5}@media(max-width:600px){.intro h1{font-size:24px}.logo{font-size:24px}.value{font-size:21px}}'''
-
-          html_doc = f'''<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0"><title>Bikusura Group | Daily Market Updates - {date_text.title()}</title><style>{css}</style></head><body><header><div class="logo">BIKUSURA GROUP</div><div class="tagline">BUILDING WEALTH • CREATING LEGACY</div><div class="date">{date_text}</div></header><main class="container"><div class="intro"><h1>Daily Market Updates</h1><p>Global, Indian, Commodity &amp; Crypto Market Snapshot</p></div><div class="snapshot">Automatically updated market data • Last update: {updated_text}</div>{section("Global Indices",global_cards)}{section("Indian Market",india_cards)}{section("INR / Dollar",card("USD / INR","₹"+fmt(usd_inr),data["USD/INR"][1],"1 USD in INR"))}{section("Crude Oil",card("Brent Crude","$"+fmt(data["Brent Crude"][0]),data["Brent Crude"][1],"Per barrel")+card("WTI Crude","$"+fmt(data["WTI Crude"][0]),data["WTI Crude"][1],"Per barrel"))}{section("Gold &amp; Silver",commodity_cards)}{section("Crypto • INR Spot",crypto_cards)}<section class="insight"><h2>Market Insight</h2><p>Market values use the latest available daily close from Yahoo Finance. GIFT Nifty is fetched from the NSE India market-status feed. Gold and silver are converted from international futures prices into indicative INR values using USD/INR. Gold is shown per 10 gm and silver per kg. Bitcoin and Ethereum are converted to INR using USD/INR. Prices may differ from local bullion, exchange or broker rates.</p></section></main><footer class="footer"><strong>BIKUSURA GROUP</strong><div class="disclaimer">Market data is for information only and is not investment advice. Data availability depends on the market-data provider.</div></footer></body></html>'''
-          Path("Bikusura_Daily_Market_Updates.html").write_text(html_doc, encoding="utf-8")
-          print("Market snapshot generated:", updated_text)
+          html_doc=f'''<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0"><title>Bikusura Group | Daily Market Updates - {date_text.title()}</title><style>{css}</style></head><body><header><div class="logo">BIKUSURA GROUP</div><div class="tagline">BUILDING WEALTH • CREATING LEGACY</div><div class="date">{date_text}</div></header><main class="container"><div class="intro"><h1>Daily Market Updates</h1><p>Global, Indian, Commodity &amp; Crypto Market Snapshot</p></div><div class="snapshot">Automatically updated market data • Last update: {updated_text}</div>{section('Global Indices',global_cards)}{section('Indian Market',india_cards)}{section('INR / Dollar',card('USD / INR','₹'+fmt(usd),q('USD/INR')[1],'1 USD in INR'))}{section('Crude Oil',card('Brent Crude','$'+fmt(q('Brent Crude')[0]),q('Brent Crude')[1],'Per barrel')+card('WTI Crude','$'+fmt(q('WTI Crude')[0]),q('WTI Crude')[1],'Per barrel'))}{section('Gold &amp; Silver',card('Gold','₹'+fmt(gold_10g,0),q('Gold')[1],'Indicative INR value • Per 10 gm')+card('Silver','₹'+fmt(silver_kg,0),q('Silver')[1],'Indicative INR value • Per kg'))}{section('Crypto • INR Spot',card('Bitcoin (BTC)','₹'+fmt(btc_inr,0),q('Bitcoin')[1],'Daily spot • INR')+card('Ethereum (ETH)','₹'+fmt(eth_inr,0),q('Ethereum')[1],'Daily spot • INR'))}<section class="insight"><h2>Market Insight</h2><p>Market data is fetched automatically from Yahoo Finance, with GIFT Nifty from the NSE India market-status feed. If a provider temporarily fails, that individual field shows N/A without stopping the complete page update.</p></section></main><footer class="footer"><strong>BIKUSURA GROUP</strong><div>Market data is for information only and is not investment advice.</div></footer></body></html>'''
+          Path('Bikusura_Daily_Market_Updates.html').write_text(html_doc,encoding='utf-8')
+          print('Market snapshot generated:',updated_text)
           PY
 
-      - name: Apply official Bikusura Group logo
-        run: |
-          python - <<'PY'
-          import re
-          from pathlib import Path
-          path = Path("index.html")
-          text = path.read_text(encoding="utf-8")
-          replacement = '<img src="https://raw.githubusercontent.com/groupbikusura-tech/bikusura-website/main/assets/bikusura-logo.png" alt="Bikusura Group" style="height:44px;width:auto;display:block;object-fit:contain;">'
-          text = re.sub(r'<img[^>]+alt=["\']Bikusura Group["\'][^>]*>', replacement, text, count=1, flags=re.I)
-          path.write_text(text, encoding="utf-8")
-          PY
-
-      - name: Commit and push updated pages
+      - name: Commit and push updated page
         run: |
           git config user.name "bikusura-market-bot"
           git config user.email "actions@users.noreply.github.com"
-          git add index.html Bikusura_Daily_Market_Updates.html
+          git add Bikusura_Daily_Market_Updates.html
           if git diff --cached --quiet; then
             echo "No page changes to commit"
           else
