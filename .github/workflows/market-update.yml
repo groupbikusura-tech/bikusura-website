@@ -103,8 +103,80 @@ jobs:
           def q(n): return data[n]
           glob=''.join(card(n,fmt(q(n)[0]),q(n)[1],q(n)[2]) for n in ['Nikkei 225','KOSPI','Hang Seng','Dow Jones','S&P 500','NASDAQ'])
           india=card('GIFT Nifty',fmt(gift[0]),gift[1],gift[2])+''.join(card(n,fmt(q(n)[0]),q(n)[1],q(n)[2]) for n in ['Sensex','Nifty 50','Nifty Bank'])
-          usd=q('USD/INR')[0]; gold=q('Gold')[0]; silver=q('Silver')[0]; btc=q('Bitcoin')[0]; eth=q('Ethereum')[0]
-          gold10=gold*usd*10/31.1034768 if gold and usd else None; silkg=silver*usd*1000/31.1034768 if silver and usd else None; btci=btc*usd if btc and usd else None; ethi=eth*usd if eth and usd else None
+          usd=q('USD/INR')[0]; btc=q('Bitcoin')[0]; eth=q('Ethereum')[0]
+          # Indian bullion must use IBJA benchmark rates, not COMEX futures
+          # converted through USD/INR. IBJA publishes Gold 999 per 10g and
+          # Silver 999 per kg; use the latest PM rate and compare with the
+          # previous published PM session.
+          def ibja_rates():
+            import re
+            from html.parser import HTMLParser
+            class P(HTMLParser):
+              def __init__(self): super().__init__(); self.rows=[]; self.row=None; self.cell=None
+              def handle_starttag(self,tag,attrs):
+                if tag=='tr': self.row=[]
+                elif tag in ('td','th') and self.row is not None: self.cell=''
+              def handle_data(self,data):
+                if self.row is not None and self.cell is not None: self.cell+=data
+              def handle_endtag(self,tag):
+                if tag in ('td','th') and self.row is not None and self.cell is not None:
+                  self.row.append(' '.join(self.cell.split())); self.cell=None
+                elif tag=='tr' and self.row is not None:
+                  if self.row: self.rows.append(self.row)
+                  self.row=None
+            rawhtml=subprocess.run(['curl','-L','--fail','--silent','--show-error','--max-time','30','--retry','4','-A','Mozilla/5.0','https://www.ibjarates.com/'],capture_output=True,text=True)
+            if rawhtml.returncode: raise RuntimeError(rawhtml.stderr.strip() or 'IBJA fetch failed')
+            p=P(); p.feed(rawhtml.stdout)
+            rows=p.rows
+            gold_row=next((r for r in rows if r and r[0].lower().startswith('gold 999') and len(r)>=3),None)
+            silver_row=next((r for r in rows if r and r[0].lower().startswith('silver 999') and len(r)>=3),None)
+            if not gold_row or not silver_row: raise RuntimeError('IBJA current rates not found')
+            gold_pm=float(gold_row[2].replace(',','')); silver_pm=float(silver_row[2].replace(',',''))
+            dates=[]
+            for r in rows:
+              if r and re.match(r'^\\d{2}/\\d{2}/\\d{4}
+          css='body{font-family:Arial;background:linear-gradient(135deg,#071a33,#020b17);color:#fff;margin:0;padding:30px}header{text-align:center;padding:20px;border-bottom:1px solid #806b25}.logo{font-size:28px;font-weight:800;color:#f1d77a}.tag{color:#aebbd0;font-size:12px;letter-spacing:3px}.date{display:inline-block;margin:20px;padding:9px 18px;border:1px solid #806b25;border-radius:30px;color:#f1d77a}.container{max-width:1100px;margin:auto}.intro{text-align:center}.intro p,.note{color:#aebbd0;font-size:12px}.snapshot{margin:25px 0;padding:15px;text-align:center;border:1px solid #806b25;border-radius:15px}.section{margin-top:28px}h2{font-size:20px}.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:15px}.card{background:#ffffff0d;border:1px solid #ffffff18;border-radius:15px;padding:19px}.name{color:#aebbd0;font-size:12px;text-transform:uppercase}.value{font-size:23px;font-weight:800;margin-top:8px}.change{margin-top:7px;font-weight:700}.up{color:#28c76f}.down{color:#ff5c5c}.neutral{color:#f1d77a}.insight{margin-top:28px;padding:20px;border:1px solid #806b25;border-radius:15px;color:#d6dfec}footer{text-align:center;margin-top:30px;padding:25px;color:#aebbd0}footer strong{color:#f1d77a}'
+          h=f'''<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Bikusura Group | Daily Market Updates - {date_text.title()}</title><style>{css}</style></head><body><header><div class="logo">BIKUSURA GROUP</div><div class="tag">BUILDING WEALTH • CREATING LEGACY</div><div class="date">{date_text}</div></header><main class="container"><div class="intro"><h1>Daily Market Updates</h1><p>Global, Indian, Commodity &amp; Crypto Market Snapshot</p></div><div class="snapshot">Automatically updated market data • Last update: {updated_text}</div>{sec('Global Indices',glob)}{sec('Indian Market',india)}{sec('INR / Dollar',card('USD / INR','₹'+fmt(usd),q('USD/INR')[1],'1 USD in INR'))}{sec('Crude Oil',card('Brent Crude','$'+fmt(q('Brent Crude')[0]),q('Brent Crude')[1],'Per barrel')+card('WTI Crude','$'+fmt(q('WTI Crude')[0]),q('WTI Crude')[1],'Per barrel'))}{sec('Gold &amp; Silver',card('Gold','₹'+fmt(gold[0],0),gold[1],'IBJA Gold 999 • Per 10 gm • PM benchmark')+card('Silver','₹'+fmt(silver[0],0),silver[1],'IBJA Silver 999 • Per kg • PM benchmark'))}{sec('Crypto • INR Spot',card('Bitcoin (BTC)','₹'+fmt(btci,0),q('Bitcoin')[1],'Daily spot • INR')+card('Ethereum (ETH)','₹'+fmt(ethi,0),q('Ethereum')[1],'Daily spot • INR'))}<div class="insight"><h2>Market Insight</h2><p>Market data is fetched automatically. Yahoo Finance uses one multi-symbol request to reduce rate-limit failures; GIFT Nifty comes from the NSE India market-status feed.</p></div></main><footer><strong>BIKUSURA GROUP</strong><div>Market data is for information only and is not investment advice.</div></footer></body></html>'''
+          Path('Bikusura_Daily_Market_Updates.html').write_text(h,encoding='utf-8')
+          print('Generated',updated_text)
+          PY
+      - name: Commit and push updated page
+        run: |
+          git config user.name "bikusura-market-bot"
+          git config user.email "actions@users.noreply.github.com"
+          git add Bikusura_Daily_Market_Updates.html
+          if git diff --cached --quiet; then echo "No page changes"; else git commit -m "chore: update daily market data"; git push; fi
+,r[0]) and len(r)>=7:
+                try: dates.append((datetime.strptime(r[0],'%d/%m/%Y').date(),float(r[6].replace(',','')),float(r[7].replace(',','')) if len(r)>7 else None))
+                except Exception: pass
+            # The first historical row is the latest prior published session.
+            prev_gold=prev_silver=None; prev_date=None
+            hist=[r for r in rows if r and re.match(r'^\\d{2}/\\d{2}/\\d{4}
+          css='body{font-family:Arial;background:linear-gradient(135deg,#071a33,#020b17);color:#fff;margin:0;padding:30px}header{text-align:center;padding:20px;border-bottom:1px solid #806b25}.logo{font-size:28px;font-weight:800;color:#f1d77a}.tag{color:#aebbd0;font-size:12px;letter-spacing:3px}.date{display:inline-block;margin:20px;padding:9px 18px;border:1px solid #806b25;border-radius:30px;color:#f1d77a}.container{max-width:1100px;margin:auto}.intro{text-align:center}.intro p,.note{color:#aebbd0;font-size:12px}.snapshot{margin:25px 0;padding:15px;text-align:center;border:1px solid #806b25;border-radius:15px}.section{margin-top:28px}h2{font-size:20px}.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:15px}.card{background:#ffffff0d;border:1px solid #ffffff18;border-radius:15px;padding:19px}.name{color:#aebbd0;font-size:12px;text-transform:uppercase}.value{font-size:23px;font-weight:800;margin-top:8px}.change{margin-top:7px;font-weight:700}.up{color:#28c76f}.down{color:#ff5c5c}.neutral{color:#f1d77a}.insight{margin-top:28px;padding:20px;border:1px solid #806b25;border-radius:15px;color:#d6dfec}footer{text-align:center;margin-top:30px;padding:25px;color:#aebbd0}footer strong{color:#f1d77a}'
+          h=f'''<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Bikusura Group | Daily Market Updates - {date_text.title()}</title><style>{css}</style></head><body><header><div class="logo">BIKUSURA GROUP</div><div class="tag">BUILDING WEALTH • CREATING LEGACY</div><div class="date">{date_text}</div></header><main class="container"><div class="intro"><h1>Daily Market Updates</h1><p>Global, Indian, Commodity &amp; Crypto Market Snapshot</p></div><div class="snapshot">Automatically updated market data • Last update: {updated_text}</div>{sec('Global Indices',glob)}{sec('Indian Market',india)}{sec('INR / Dollar',card('USD / INR','₹'+fmt(usd),q('USD/INR')[1],'1 USD in INR'))}{sec('Crude Oil',card('Brent Crude','$'+fmt(q('Brent Crude')[0]),q('Brent Crude')[1],'Per barrel')+card('WTI Crude','$'+fmt(q('WTI Crude')[0]),q('WTI Crude')[1],'Per barrel'))}{sec('Gold &amp; Silver',card('Gold','₹'+fmt(gold10,0),q('Gold')[1],'Indicative INR • Per 10 gm')+card('Silver','₹'+fmt(silkg,0),q('Silver')[1],'Indicative INR • Per kg'))}{sec('Crypto • INR Spot',card('Bitcoin (BTC)','₹'+fmt(btci,0),q('Bitcoin')[1],'Daily spot • INR')+card('Ethereum (ETH)','₹'+fmt(ethi,0),q('Ethereum')[1],'Daily spot • INR'))}<div class="insight"><h2>Market Insight</h2><p>Market data is fetched automatically. Yahoo Finance uses one multi-symbol request to reduce rate-limit failures; GIFT Nifty comes from the NSE India market-status feed.</p></div></main><footer><strong>BIKUSURA GROUP</strong><div>Market data is for information only and is not investment advice.</div></footer></body></html>'''
+          Path('Bikusura_Daily_Market_Updates.html').write_text(h,encoding='utf-8')
+          print('Generated',updated_text)
+          PY
+      - name: Commit and push updated page
+        run: |
+          git config user.name "bikusura-market-bot"
+          git config user.email "actions@users.noreply.github.com"
+          git add Bikusura_Daily_Market_Updates.html
+          if git diff --cached --quiet; then echo "No page changes"; else git commit -m "chore: update daily market data"; git push; fi
+,r[0])]
+            if hist:
+              h=hist[0]; prev_date=h[0] if len(h)>0 else None
+              # Historical table columns: date, gold 999, gold 995, ..., silver 999
+              prev_gold=float(h[1].replace(',',''))
+              prev_silver=float(h[6].replace(',',''))
+            return gold_pm,(gold_pm-prev_gold)/prev_gold*100 if prev_gold else 0,datetime.now(IST).date().isoformat(),silver_pm,(silver_pm-prev_silver)/prev_silver*100 if prev_silver else 0,datetime.now(IST).date().isoformat(),str(prev_date) if prev_date else 'Previous published session'
+          try:
+            goldv,goldc,goldd,silv,silc,sild,metalprev=ibja_rates()
+            gold=(goldv,goldc,goldd); silver=(silv,silc,sild)
+          except Exception as e:
+            print('WARN IBJA:',e)
+            gold=(None,None,'IBJA unavailable'); silver=(None,None,'IBJA unavailable')
+          btci=btc*usd if btc and usd else None; ethi=eth*usd if eth and usd else None
           css='body{font-family:Arial;background:linear-gradient(135deg,#071a33,#020b17);color:#fff;margin:0;padding:30px}header{text-align:center;padding:20px;border-bottom:1px solid #806b25}.logo{font-size:28px;font-weight:800;color:#f1d77a}.tag{color:#aebbd0;font-size:12px;letter-spacing:3px}.date{display:inline-block;margin:20px;padding:9px 18px;border:1px solid #806b25;border-radius:30px;color:#f1d77a}.container{max-width:1100px;margin:auto}.intro{text-align:center}.intro p,.note{color:#aebbd0;font-size:12px}.snapshot{margin:25px 0;padding:15px;text-align:center;border:1px solid #806b25;border-radius:15px}.section{margin-top:28px}h2{font-size:20px}.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:15px}.card{background:#ffffff0d;border:1px solid #ffffff18;border-radius:15px;padding:19px}.name{color:#aebbd0;font-size:12px;text-transform:uppercase}.value{font-size:23px;font-weight:800;margin-top:8px}.change{margin-top:7px;font-weight:700}.up{color:#28c76f}.down{color:#ff5c5c}.neutral{color:#f1d77a}.insight{margin-top:28px;padding:20px;border:1px solid #806b25;border-radius:15px;color:#d6dfec}footer{text-align:center;margin-top:30px;padding:25px;color:#aebbd0}footer strong{color:#f1d77a}'
           h=f'''<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Bikusura Group | Daily Market Updates - {date_text.title()}</title><style>{css}</style></head><body><header><div class="logo">BIKUSURA GROUP</div><div class="tag">BUILDING WEALTH • CREATING LEGACY</div><div class="date">{date_text}</div></header><main class="container"><div class="intro"><h1>Daily Market Updates</h1><p>Global, Indian, Commodity &amp; Crypto Market Snapshot</p></div><div class="snapshot">Automatically updated market data • Last update: {updated_text}</div>{sec('Global Indices',glob)}{sec('Indian Market',india)}{sec('INR / Dollar',card('USD / INR','₹'+fmt(usd),q('USD/INR')[1],'1 USD in INR'))}{sec('Crude Oil',card('Brent Crude','$'+fmt(q('Brent Crude')[0]),q('Brent Crude')[1],'Per barrel')+card('WTI Crude','$'+fmt(q('WTI Crude')[0]),q('WTI Crude')[1],'Per barrel'))}{sec('Gold &amp; Silver',card('Gold','₹'+fmt(gold10,0),q('Gold')[1],'Indicative INR • Per 10 gm')+card('Silver','₹'+fmt(silkg,0),q('Silver')[1],'Indicative INR • Per kg'))}{sec('Crypto • INR Spot',card('Bitcoin (BTC)','₹'+fmt(btci,0),q('Bitcoin')[1],'Daily spot • INR')+card('Ethereum (ETH)','₹'+fmt(ethi,0),q('Ethereum')[1],'Daily spot • INR'))}<div class="insight"><h2>Market Insight</h2><p>Market data is fetched automatically. Yahoo Finance uses one multi-symbol request to reduce rate-limit failures; GIFT Nifty comes from the NSE India market-status feed.</p></div></main><footer><strong>BIKUSURA GROUP</strong><div>Market data is for information only and is not investment advice.</div></footer></body></html>'''
           Path('Bikusura_Daily_Market_Updates.html').write_text(h,encoding='utf-8')
