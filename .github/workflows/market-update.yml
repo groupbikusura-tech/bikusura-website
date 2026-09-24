@@ -42,17 +42,36 @@ jobs:
             return json.loads(p.stdout)
           def batch():
             syms=list(tickers.values()); j=','.join(quote(s,safe='') for s in syms)
+            # Use Yahoo Chart API and convert each instrument's timestamps into
+            # the exchange timezone reported by Yahoo. Spark's UTC date labels
+            # can shift Asian-market closes to the wrong calendar day.
             for host in ['query1.finance.yahoo.com','query2.finance.yahoo.com']:
               try:
-                rs=(getj(f'https://{host}/v7/finance/spark?symbols={j}&range=10d&interval=1d&indicators=close').get('spark') or {}).get('result') or []; out={}
-                for x in rs:
-                  r=(x.get('response') or [{}])[0]; ts=r.get('timestamp') or []; cs=((r.get('indicators') or {}).get('quote') or [{}])[0].get('close') or []; rows=[(datetime.fromtimestamp(t,timezone.utc).date(),float(c)) for t,c in zip(ts,cs) if c is not None]
+                out={}
+                for sym in syms:
+                  u=f'https://{host}/v8/finance/chart/{quote(sym,safe="")}?range=10d&interval=1d&events=history'
+                  r=(getj(u).get('chart') or {}).get('result') or []
+                  if not r: continue
+                  r=r[0]; meta=r.get('meta') or {}
+                  import zoneinfo
+                  tzname=meta.get('exchangeTimezoneName') or 'UTC'
+                  try: tz=zoneinfo.ZoneInfo(tzname)
+                  except Exception: tz=timezone.utc
+                  ts=r.get('timestamp') or []
+                  closes=((r.get('indicators') or {}).get('quote') or [{}])[0].get('close') or []
+                  rows=[]
+                  for t,v in zip(ts,closes):
+                    if v is not None:
+                      rows.append((datetime.fromtimestamp(t,timezone.utc).astimezone(tz).date(),float(v)))
                   if rows:
-                    rows.sort(); d,v=rows[-1]; prev=rows[-2][1] if len(rows)>1 else v; out[x['symbol']]=(v,(v-prev)/prev*100 if prev else 0,str(d))
-                if len(out)>=9: return {s:out.get(s,(None,None,'Latest available')) for s in syms}
+                    rows.sort(); d,v=rows[-1]; prev=rows[-2][1] if len(rows)>1 else v
+                    out[sym]=(v,(v-prev)/prev*100 if prev else 0,str(d))
+                if len(out)>=9:
+                  return {s:out.get(s,(None,None,'Latest available')) for s in syms}
               except Exception as e: print('WARN Yahoo:',e)
               time.sleep(2)
             return {s:(None,None,'Latest available') for s in syms}
+
           raw=batch(); data={n:raw[s] for n,s in tickers.items()}
 
           # Data-quality guard: after the Indian cash market has closed,
