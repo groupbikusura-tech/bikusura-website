@@ -5,10 +5,10 @@ on:
     paths:
       - '.github/workflows/market-update.yml'
   schedule:
-    - cron: "30 22 * * *"
+    - cron: "15 1 * * *"
     - cron: "45 3 * * *"
-    - cron: "45 10 * * *"
-    - cron: "30 17 * * *"
+    - cron: "15 10 * * *"
+    - cron: "15 17 * * *"
   workflow_dispatch:
 
 permissions:
@@ -30,199 +30,66 @@ jobs:
         run: |
           python <<'PY'
           import html,json,subprocess,time
-          from datetime import datetime,timezone,timedelta,date
+          from datetime import datetime,timezone,timedelta
           from pathlib import Path
           from urllib.parse import quote
-
-          IST=timezone(timedelta(hours=5,minutes=30))
-          now=datetime.now(IST)
-          date_text=now.strftime('%d %B %Y').upper()
-          updated_text=now.strftime('%d %b %Y, %I:%M %p IST')
-
-          # Exchange holidays for NSE equities in 2026. Do not invent a trading day.
-          NSE_HOLIDAYS={
-            '2026-01-15','2026-01-26','2026-03-03','2026-03-26','2026-03-31',
-            '2026-04-03','2026-04-14','2026-05-01','2026-05-28','2026-06-26',
-            '2026-09-14','2026-10-02','2026-10-20','2026-11-10','2026-11-24','2026-12-25'
-          }
-
-          tickers={
-            'Nikkei 225':'^N225','KOSPI':'^KS11','Hang Seng':'^HSI',
-            'Dow Jones':'^DJI','S&P 500':'^GSPC','NASDAQ':'^IXIC',
-            'Sensex':'^BSESN','Nifty 50':'^NSEI','Nifty Bank':'^NSEBANK',
-            'USD/INR':'INR=X','Brent Crude':'BZ=F','WTI Crude':'CL=F',
-            'Gold':'GC=F','Silver':'SI=F','Bitcoin':'BTC-USD','Ethereum':'ETH-USD'
-          }
-
-          def curl_json(url):
-            p=subprocess.run(
-              ['curl','-L','--fail','--silent','--show-error','--max-time','30',
-               '--retry','4','--retry-delay','2','-A','Mozilla/5.0',url],
-              capture_output=True,text=True
-            )
-            if p.returncode:
-              raise RuntimeError(p.stderr.strip() or str(p.returncode))
+          IST=timezone(timedelta(hours=5,minutes=30)); now=datetime.now(IST)
+          date_text=now.strftime('%d %B %Y').upper(); updated_text=now.strftime('%d %b %Y, %I:%M %p IST')
+          tickers={'Nikkei 225':'^N225','KOSPI':'^KS11','Hang Seng':'^HSI','Dow Jones':'^DJI','S&P 500':'^GSPC','NASDAQ':'^IXIC','Sensex':'^BSESN','Nifty 50':'^NSEI','Nifty Bank':'^NSEBANK','USD/INR':'INR=X','Brent Crude':'BZ=F','WTI Crude':'CL=F','Gold':'GC=F','Silver':'SI=F','Bitcoin':'BTC-USD','Ethereum':'ETH-USD'}
+          def getj(u):
+            p=subprocess.run(['curl','-L','--fail','--silent','--show-error','--max-time','30','--retry','4','--retry-delay','2','-A','Mozilla/5.0',u],capture_output=True,text=True)
+            if p.returncode: raise RuntimeError(p.stderr.strip() or str(p.returncode))
             return json.loads(p.stdout)
-
-          def previous_nse_day(d):
-            d=d-timedelta(days=1)
-            while d.weekday()>=5 or d.isoformat() in NSE_HOLIDAYS:
-              d-=timedelta(days=1)
-            return d
-
-          def expected_nse_date():
-            # NSE equity regular session ends 15:30 IST; use the last completed
-            # session before the close, and the latest completed session after it.
-            if now.weekday()>=5 or now.date().isoformat() in NSE_HOLIDAYS:
-              return previous_nse_day(now.date())
-            if now.hour < 16:
-              return previous_nse_day(now.date())
-            return now.date()
-
-          def yahoo_spark():
-            syms=list(tickers.values())
-            encoded=','.join(quote(x,safe='') for x in syms)
-            last_err=None
-            for host in ('query1.finance.yahoo.com','query2.finance.yahoo.com'):
+          def batch():
+            syms=list(tickers.values()); j=','.join(quote(s,safe='') for s in syms)
+            for host in ['query1.finance.yahoo.com','query2.finance.yahoo.com']:
               try:
-                j=curl_json(f'https://{host}/v7/finance/spark?symbols={encoded}&range=10d&interval=1d&indicators=close')
-                results=(j.get('spark') or {}).get('result') or []
-                out={}
-                for x in results:
-                  symbol=x.get('symbol')
-                  r=(x.get('response') or [{}])[0]
-                  ts=r.get('timestamp') or []
-                  closes=((r.get('indicators') or {}).get('quote') or [{}])[0].get('close') or []
-                  rows=[]
-                  for t,c in zip(ts,closes):
-                    if c is None: continue
-                    rows.append((datetime.fromtimestamp(t,timezone.utc).date(),float(c)))
-                  rows.sort()
+                rs=(getj(f'https://{host}/v7/finance/spark?symbols={j}&range=10d&interval=1d&indicators=close').get('spark') or {}).get('result') or []; out={}
+                for x in rs:
+                  r=(x.get('response') or [{}])[0]; ts=r.get('timestamp') or []; cs=((r.get('indicators') or {}).get('quote') or [{}])[0].get('close') or []; rows=[(datetime.fromtimestamp(t,timezone.utc).date(),float(c)) for t,c in zip(ts,cs) if c is not None]
                   if rows:
-                    d,v=rows[-1]
-                    prev=rows[-2][1] if len(rows)>1 else v
-                    out[symbol]=(v,(v-prev)/prev*100 if prev else 0,d)
-                if len(out)>=len(syms)-2:
-                  return out
-              except Exception as e:
-                last_err=e
-                print('WARN Yahoo:',e)
-                time.sleep(2)
-            raise RuntimeError(f'Yahoo Finance feed unavailable: {last_err}')
+                    rows.sort(); d,v=rows[-1]; prev=rows[-2][1] if len(rows)>1 else v; out[x['symbol']]=(v,(v-prev)/prev*100 if prev else 0,str(d))
+                if len(out)>=9: return {s:out.get(s,(None,None,'Latest available')) for s in syms}
+              except Exception as e: print('WARN Yahoo:',e)
+              time.sleep(2)
+            return {s:(None,None,'Latest available') for s in syms}
+          raw=batch(); data={n:raw[s] for n,s in tickers.items()}
 
-          raw=yahoo_spark()
-          data={name:raw.get(sym) for name,sym in tickers.items()}
-
-          # Never publish an old Indian close after a completed NSE session.
-          target=expected_nse_date()
-          for name in ('Sensex','Nifty 50','Nifty Bank'):
+          # Data-quality guard: after the Indian cash market has closed,
+          # never publish a previous-session snapshot as today's close.
+          # Before 16:00 IST, the latest completed NSE session is yesterday
+          # (or the previous weekday); after 16:00 it is today's session.
+          def previous_weekday(d):
+            d=d-timedelta(days=1)
+            while d.weekday() >= 5: d-=timedelta(days=1)
+            return d
+          if now.weekday() >= 5:
+            expected_nse=previous_weekday(now.date())
+          elif now.hour < 16:
+            expected_nse=previous_weekday(now.date())
+          else:
+            expected_nse=now.date()
+          for name in ['Sensex','Nifty 50','Nifty Bank']:
             row=data.get(name)
-            if not row:
-              raise RuntimeError(f'Missing {name} market data')
-            if row[2] != target:
-              raise RuntimeError(
-                f'Stale {name}: source date={row[2].isoformat()} expected={target.isoformat()}'
-              )
-
-          # GIFT Nifty from NSE. If unavailable, keep N/A rather than fabricate a value.
-          gift=(None,None,'NSE India feed unavailable')
+            if not row or row[2] != str(expected_nse):
+              raise RuntimeError(f"Refusing stale {name}: got {row[2] if row else 'missing'}, expected {expected_nse}")
           try:
-            g=(curl_json('https://www.nseindia.com/api/marketStatus').get('giftnifty') or {})
-            if g.get('LASTPRICE') is not None:
-              gift=(float(g['LASTPRICE']),float(g.get('PERCHANGE') or 0),str(g.get('TIMESTMP') or 'NSE IX'))
-          except Exception as e:
-            print('WARN GIFT:',e)
-
-          # FII/DII cash-market data from NSE. Failure is shown as N/A.
-          fii_dii=[]
-          try:
-            x=curl_json('https://www.nseindia.com/api/fiidiiTradeReact')
-            if isinstance(x,list):
-              fii_dii=x
-          except Exception as e:
-            print('WARN FII/DII:',e)
-
-          def latest_fii_dii():
-            for row in fii_dii:
-              dt=str(row.get('date') or row.get('Date') or '')
-              if dt:
-                return row
-            return {}
-          flow=latest_fii_dii()
-
-          def pick(row,*keys):
-            for k in keys:
-              if k in row and row[k] not in (None,''):
-                try: return float(str(row[k]).replace(',',''))
-                except: pass
-            return None
-
-          fii_net=pick(flow,'netValue','Net Value','netValueCash')
-          dii_net=pick(flow,'netValue','Net Value','netValueCash')
-          # NSE response contains separate category rows; find them explicitly.
-          for row in fii_dii:
-            cat=str(row.get('category') or row.get('Category') or '').upper()
-            net=pick(row,'netValue','Net Value')
-            if 'FII' in cat or 'FPI' in cat: fii_net=net
-            if 'DII' in cat: dii_net=net
-
-          def fmt(v,d=2):
-            return 'N/A' if v is None else f'{v:,.{d}f}'
-
-          def date_note(d):
-            return 'Latest available' if not isinstance(d,date) else d.strftime('%d %b %Y')
-
-          def card(name,value,change=None,note=''):
-            cl='up' if change is not None and change>0 else 'down' if change is not None and change<0 else 'neutral'
-            if change is None: ch='N/A'
-            elif change>0: ch=f'▲ {change:.2f}%'
-            elif change<0: ch=f'▼ {abs(change):.2f}%'
-            else: ch='0.00%'
-            return f'<div class="card"><div class="name">{html.escape(name)}</div><div class="value">{value}</div><div class="change {cl}">{ch}</div><div class="note">{html.escape(str(note))}</div></div>'
-
-          def sec(title,content):
-            return f'<section><h2>{title}</h2><div class="grid">{content}</div></section>'
-
-          def q(name):
-            return data[name]
-
-          glob=''.join(card(n,fmt(q(n)[0]),q(n)[1],date_note(q(n)[2])) for n in
-                     ['Nikkei 225','KOSPI','Hang Seng','Dow Jones','S&P 500','NASDAQ'])
-
-          india=card('GIFT Nifty',fmt(gift[0]),gift[1],gift[2])
-          india+=''.join(card(n,fmt(q(n)[0]),q(n)[1],date_note(q(n)[2])) for n in
-                       ['Sensex','Nifty 50','Nifty Bank'])
-
-          usd=q('USD/INR')[0]
-          gold=q('Gold')[0]; silver=q('Silver')[0]
-          btc=q('Bitcoin')[0]; eth=q('Ethereum')[0]
-          gold10=gold*usd*10/31.1034768 if gold and usd else None
-          silkg=silver*usd*1000/31.1034768 if silver and usd else None
-          btci=btc*usd if btc and usd else None
-          ethi=eth*usd if eth and usd else None
-
-          flow_html=card('FII Net',('₹'+fmt(fii_net,0)+' Cr') if fii_net is not None else 'N/A',None,'NSE • latest available')
-          flow_html+=card('DII Net',('₹'+fmt(dii_net,0)+' Cr') if dii_net is not None else 'N/A',None,'NSE • latest available')
-
-          css='body{font-family:Arial;background:linear-gradient(135deg,#071a33,#020b17);color:#fff;margin:0;padding:30px}header{text-align:center;padding:20px;border-bottom:1px solid #806b25}.logo{font-size:28px;font-weight:800;color:#f1d77a}.tag{color:#aebbd0;font-size:12px;letter-spacing:3px}.date{display:inline-block;margin:20px;padding:9px 18px;border:1px solid #806b25;border-radius:30px;color:#f1d77a}.container{max-width:1100px;margin:auto}.intro{text-align:center}.intro p,.note{color:#aebbd0;font-size:12px}.snapshot{margin:25px 0;padding:15px;text-align:center;border:1px solid #806b25;border-radius:15px}.section{margin-top:28px}h2{font-size:20px}.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:15px}.card{background:#ffffff0d;border:1px solid #ffffff18;border-radius:15px;padding:19px}.name{color:#aebbd0;font-size:12px;text-transform:uppercase}.value{font-size:23px;font-weight:800;margin-top:8px}.change{margin-top:7px;font-weight:700}.up{color:#28c76f}.down{color:#ff5c5c}.neutral{color:#f1d77a}.insight{margin-top:28px;padding:20px;border:1px solid #806b25;border-radius:15px;color:#d6dfec}footer{text-align:center;margin-top:30px;padding:25px;color:#aebbd0}footer strong{color:#f1d77a}a{color:#f1d77a}'
-
-          h=f'''<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Bikusura Group | Daily Market Updates - {date_text.title()}</title><style>{css}</style></head><body><header><div class="logo">BIKUSURA GROUP</div><div class="tag">BUILDING WEALTH • CREATING LEGACY</div><div class="date">{date_text}</div></header><main class="container"><div class="intro"><h1>Daily Market Updates</h1><p>Global, Indian, Commodity &amp; Crypto Market Snapshot</p></div><div class="snapshot">Verified automated snapshot • Generated: {updated_text}</div>{sec('Global Indices',glob)}{sec('Indian Market',india)}{sec('FII / DII Flows',flow_html)}{sec('INR / Dollar',card('USD / INR','₹'+fmt(usd),q('USD/INR')[1],date_note(q('USD/INR')[2])))}{sec('Crude Oil',card('Brent Crude','
-      - name: Commit and push updated page
-        run: |
-          git config user.name "bikusura-market-bot"
-          git config user.email "actions@users.noreply.github.com"
-          git add Bikusura_Daily_Market_Updates.html
-          if git diff --cached --quiet; then echo "No page changes"; else git commit -m "chore: update daily market data"; git push; fi
-+fmt(q('Brent Crude')[0]),q('Brent Crude')[1],date_note(q('Brent Crude')[2]))+card('WTI Crude','
-      - name: Commit and push updated page
-        run: |
-          git config user.name "bikusura-market-bot"
-          git config user.email "actions@users.noreply.github.com"
-          git add Bikusura_Daily_Market_Updates.html
-          if git diff --cached --quiet; then echo "No page changes"; else git commit -m "chore: update daily market data"; git push; fi
-+fmt(q('WTI Crude')[0]),q('WTI Crude')[1],date_note(q('WTI Crude')[2])))}{sec('Gold &amp; Silver',card('Gold','₹'+fmt(gold10,0),q('Gold')[1],'Indicative INR • Per 10 gm • USD/INR conversion')+card('Silver','₹'+fmt(silkg,0),q('Silver')[1],'Indicative INR • Per kg • USD/INR conversion'))}{sec('Crypto • INR Spot',card('Bitcoin (BTC)','₹'+fmt(btci,0),q('Bitcoin')[1],date_note(q('Bitcoin')[2]))+card('Ethereum (ETH)','₹'+fmt(ethi,0),q('Ethereum')[1],date_note(q('Ethereum')[2])))}<div class="insight"><h2>Data Integrity</h2><p>Indian index values are published only when the source date matches the latest completed NSE trading session. If a feed is stale or unavailable, the workflow stops instead of publishing an old number.</p><p>Sources: Yahoo Finance for market/commodity/crypto reference data; NSE India for GIFT Nifty and FII/DII where available.</p></div></main><footer><strong>BIKUSURA GROUP</strong><div>Market data is for information only and is not investment advice.</div></footer></body></html>'''
+            g=(getj('https://www.nseindia.com/api/marketStatus').get('giftnifty') or {}); gift=(float(g['LASTPRICE']),float(g['PERCHANGE']),str(g.get('TIMESTMP') or 'NSE IX'))
+          except Exception as e: print('WARN GIFT:',e); gift=(None,None,'NSE IX / latest available')
+          def fmt(v,d=2): return 'N/A' if v is None else f'{v:,.{d}f}'
+          def card(n,v,c,note):
+            cl='up' if c is not None and c>0 else 'down' if c is not None and c<0 else 'neutral'; ch='N/A' if c is None else f'▲ {c:.2f}%' if c>0 else f'▼ {abs(c):.2f}%' if c<0 else '0.00%'
+            return f'<div class="card"><div class="name">{html.escape(n)}</div><div class="value">{v}</div><div class="change {cl}">{ch}</div><div class="note">{html.escape(str(note))}</div></div>'
+          def sec(t,c): return f'<section><h2>{t}</h2><div class="grid">{c}</div></section>'
+          def q(n): return data[n]
+          glob=''.join(card(n,fmt(q(n)[0]),q(n)[1],q(n)[2]) for n in ['Nikkei 225','KOSPI','Hang Seng','Dow Jones','S&P 500','NASDAQ'])
+          india=card('GIFT Nifty',fmt(gift[0]),gift[1],gift[2])+''.join(card(n,fmt(q(n)[0]),q(n)[1],q(n)[2]) for n in ['Sensex','Nifty 50','Nifty Bank'])
+          usd=q('USD/INR')[0]; gold=q('Gold')[0]; silver=q('Silver')[0]; btc=q('Bitcoin')[0]; eth=q('Ethereum')[0]
+          gold10=gold*usd*10/31.1034768 if gold and usd else None; silkg=silver*usd*1000/31.1034768 if silver and usd else None; btci=btc*usd if btc and usd else None; ethi=eth*usd if eth and usd else None
+          css='body{font-family:Arial;background:linear-gradient(135deg,#071a33,#020b17);color:#fff;margin:0;padding:30px}header{text-align:center;padding:20px;border-bottom:1px solid #806b25}.logo{font-size:28px;font-weight:800;color:#f1d77a}.tag{color:#aebbd0;font-size:12px;letter-spacing:3px}.date{display:inline-block;margin:20px;padding:9px 18px;border:1px solid #806b25;border-radius:30px;color:#f1d77a}.container{max-width:1100px;margin:auto}.intro{text-align:center}.intro p,.note{color:#aebbd0;font-size:12px}.snapshot{margin:25px 0;padding:15px;text-align:center;border:1px solid #806b25;border-radius:15px}.section{margin-top:28px}h2{font-size:20px}.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:15px}.card{background:#ffffff0d;border:1px solid #ffffff18;border-radius:15px;padding:19px}.name{color:#aebbd0;font-size:12px;text-transform:uppercase}.value{font-size:23px;font-weight:800;margin-top:8px}.change{margin-top:7px;font-weight:700}.up{color:#28c76f}.down{color:#ff5c5c}.neutral{color:#f1d77a}.insight{margin-top:28px;padding:20px;border:1px solid #806b25;border-radius:15px;color:#d6dfec}footer{text-align:center;margin-top:30px;padding:25px;color:#aebbd0}footer strong{color:#f1d77a}'
+          h=f'''<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Bikusura Group | Daily Market Updates - {date_text.title()}</title><style>{css}</style></head><body><header><div class="logo">BIKUSURA GROUP</div><div class="tag">BUILDING WEALTH • CREATING LEGACY</div><div class="date">{date_text}</div></header><main class="container"><div class="intro"><h1>Daily Market Updates</h1><p>Global, Indian, Commodity &amp; Crypto Market Snapshot</p></div><div class="snapshot">Automatically updated market data • Last update: {updated_text}</div>{sec('Global Indices',glob)}{sec('Indian Market',india)}{sec('INR / Dollar',card('USD / INR','₹'+fmt(usd),q('USD/INR')[1],'1 USD in INR'))}{sec('Crude Oil',card('Brent Crude','$'+fmt(q('Brent Crude')[0]),q('Brent Crude')[1],'Per barrel')+card('WTI Crude','$'+fmt(q('WTI Crude')[0]),q('WTI Crude')[1],'Per barrel'))}{sec('Gold &amp; Silver',card('Gold','₹'+fmt(gold10,0),q('Gold')[1],'Indicative INR • Per 10 gm')+card('Silver','₹'+fmt(silkg,0),q('Silver')[1],'Indicative INR • Per kg'))}{sec('Crypto • INR Spot',card('Bitcoin (BTC)','₹'+fmt(btci,0),q('Bitcoin')[1],'Daily spot • INR')+card('Ethereum (ETH)','₹'+fmt(ethi,0),q('Ethereum')[1],'Daily spot • INR'))}<div class="insight"><h2>Market Insight</h2><p>Market data is fetched automatically. Yahoo Finance uses one multi-symbol request to reduce rate-limit failures; GIFT Nifty comes from the NSE India market-status feed.</p></div></main><footer><strong>BIKUSURA GROUP</strong><div>Market data is for information only and is not investment advice.</div></footer></body></html>'''
           Path('Bikusura_Daily_Market_Updates.html').write_text(h,encoding='utf-8')
-          print('Generated verified market page:',updated_text,'NSE target:',target.isoformat())
+          print('Generated',updated_text)
           PY
       - name: Commit and push updated page
         run: |
