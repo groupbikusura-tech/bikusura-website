@@ -1,5 +1,10 @@
 {
-  "updated_at_utc": null,
-  "source": "Yahoo Finance chart data",
-  "indices": {}
+  "updated_at_utc": "2026-09-27T00:00:00Z",
+  "source": "Verified 25 Sep 2026 closing data; automated updater will refresh on scheduled weekdays",
+  "indices": {
+    "nifty50": {"symbol":"^NSEI","value":23140.50,"previous_close":23063.10,"change":77.40,"change_pct":0.34,"session_date":"2026-09-25"},
+    "sensex": {"symbol":"^BSESN","value":73895.74,"previous_close":73580.54,"change":315.20,"change_pct":0.43,"session_date":"2026-09-25"},
+    "banknifty": {"symbol":"^NSEBANK","value":55580.40,"previous_close":55438.50,"change":141.90,"change_pct":0.26,"session_date":"2026-09-25"},
+    "indiavix": {"symbol":"^INDIAVIX","value":12.16,"previous_close":12.688,"change":-0.53,"change_pct":-4.16,"session_date":"2026-09-25"}
+  }
 }
