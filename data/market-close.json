@@ -1,5 +1,5 @@
 {
-  "updated_at_utc": "2026-10-01T17:08:17.485238+00:00",
+  "updated_at_utc": "2026-10-02T16:21:31.366057+00:00",
   "source": "Yahoo Finance chart data",
   "indices": {
     "nifty50": {
@@ -28,10 +28,10 @@
     },
     "indiavix": {
       "symbol": "^INDIAVIX",
-      "value": 14.45,
+      "value": 14.46,
       "previous_close": 13.49,
       "change": 0.97,
-      "change_pct": 7.15,
+      "change_pct": 7.19,
       "session_date": "2026-10-01"
     }
   }
