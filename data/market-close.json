@@ -1,38 +1,38 @@
 {
-  "updated_at_utc": "2026-10-20T15:21:44.182328+00:00",
+  "updated_at_utc": "2026-10-21T15:35:59.683253+00:00",
   "source": "Yahoo Finance chart data",
   "indices": {
     "nifty50": {
       "symbol": "^NSEI",
-      "value": 22888.95,
-      "previous_close": 23146.15,
-      "change": -257.2,
-      "change_pct": -1.11,
-      "session_date": "2026-10-19"
+      "value": 22811.35,
+      "previous_close": 22888.95,
+      "change": -77.6,
+      "change_pct": -0.34,
+      "session_date": "2026-10-21"
     },
     "sensex": {
       "symbol": "^BSESN",
-      "value": 73852.9,
-      "previous_close": 74729.27,
-      "change": -876.38,
-      "change_pct": -1.17,
-      "session_date": "2026-10-19"
+      "value": 73709.69,
+      "previous_close": 73852.9,
+      "change": -143.21,
+      "change_pct": -0.19,
+      "session_date": "2026-10-21"
     },
     "banknifty": {
       "symbol": "^NSEBANK",
-      "value": 55488.1,
-      "previous_close": 55844.0,
-      "change": -355.9,
-      "change_pct": -0.64,
-      "session_date": "2026-10-19"
+      "value": 54976.9,
+      "previous_close": 55488.1,
+      "change": -511.2,
+      "change_pct": -0.92,
+      "session_date": "2026-10-21"
     },
     "indiavix": {
       "symbol": "^INDIAVIX",
-      "value": 14.77,
-      "previous_close": 14.06,
-      "change": 0.71,
-      "change_pct": 5.05,
-      "session_date": "2026-10-19"
+      "value": 15.68,
+      "previous_close": 14.77,
+      "change": 0.9,
+      "change_pct": 6.13,
+      "session_date": "2026-10-21"
     }
   }
 }
