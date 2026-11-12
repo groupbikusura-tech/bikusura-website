@@ -1,5 +1,5 @@
 {
-  "updated_at_utc": "2026-11-11T18:01:56.831761+00:00",
+  "updated_at_utc": "2026-11-12T18:34:32.168860+00:00",
   "source": "Yahoo Finance chart data",
   "indices": {
     "nifty50": {
@@ -31,7 +31,7 @@
       "value": 17.56,
       "previous_close": 17.42,
       "change": 0.14,
-      "change_pct": 0.77,
+      "change_pct": 0.8,
       "session_date": "2026-11-11"
     }
   }
